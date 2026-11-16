@@ -1,9 +1,12 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Galago — Grow while you sleep",
   description: "Nigerian digital marketplace. Unified wallet for social growth, VTU, virtual numbers, cards, eSIM & crypto funding.",
+};
+
+export const viewport: Viewport = {
   themeColor: "#0B0F14",
 };
 

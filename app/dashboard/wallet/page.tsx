@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 
@@ -30,7 +30,7 @@ type CryptoDeposit = {
   created_at: string;
 };
 
-export default function WalletPage() {
+function WalletContent() {
   const searchParams = useSearchParams();
   const [balance, setBalance] = useState<number | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
@@ -187,12 +187,9 @@ export default function WalletPage() {
         </div>
       )}
 
-      {/* Fiat */}
       <div className="bg-bush border border-bush rounded-2xl p-6">
         <h2 className="font-medium mb-1">Fund with Naira</h2>
-        <p className="text-mist text-sm mb-4">
-          Card, bank transfer, USSD via Paystack.
-        </p>
+        <p className="text-mist text-sm mb-4">Card, bank transfer, USSD via Paystack.</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="block text-sm text-mist mb-1.5">Amount (NGN)</label>
@@ -217,12 +214,9 @@ export default function WalletPage() {
         </div>
       </div>
 
-      {/* Crypto */}
       <div className="bg-bush border border-bush rounded-2xl p-6">
         <h2 className="font-medium mb-1">Fund with Crypto (USDT)</h2>
-        <p className="text-mist text-sm mb-4">
-          Send USDT on TRC20. We convert and credit your Naira wallet.
-        </p>
+        <p className="text-mist text-sm mb-4">Send USDT on TRC20. We convert and credit your Naira wallet.</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="block text-sm text-mist mb-1.5">Amount (NGN)</label>
@@ -245,9 +239,7 @@ export default function WalletPage() {
             </button>
           </div>
         </div>
-        <p className="text-mist text-xs mt-3">
-          Minimum ₦1,000. Network: TRC20. Do not send other coins or networks.
-        </p>
+        <p className="text-mist text-xs mt-3">Minimum ₦1,000. Network: TRC20.</p>
       </div>
 
       {deposits.filter((d) => d.status === "pending" || d.status === "confirming").length > 0 && (
@@ -268,12 +260,7 @@ export default function WalletPage() {
                     <p className="text-mist text-xs capitalize">{d.status}</p>
                   </div>
                   {d.pay_url && (
-                    <a
-                      href={d.pay_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gold text-sm hover:underline"
-                    >
+                    <a href={d.pay_url} target="_blank" rel="noopener noreferrer" className="text-gold text-sm hover:underline">
                       Open invoice
                     </a>
                   )}
@@ -302,20 +289,12 @@ export default function WalletPage() {
                 {ledger.map((e) => (
                   <tr key={e.id} className="border-b border-night/50 last:border-0">
                     <td className="px-4 py-3 capitalize">{e.type.replace(/_/g, " ")}</td>
-                    <td
-                      className={`px-4 py-3 font-mono ${
-                        e.amount_kobo >= 0 ? "text-success" : "text-danger"
-                      }`}
-                    >
+                    <td className={`px-4 py-3 font-mono ${e.amount_kobo >= 0 ? "text-success" : "text-danger"}`}>
                       {e.amount_kobo >= 0 ? "+" : ""}
                       {formatNaira(e.amount_kobo)}
                     </td>
-                    <td className="px-4 py-3 text-mist">
-                      {formatNaira(e.balance_after_kobo)}
-                    </td>
-                    <td className="px-4 py-3 text-mist">
-                      {new Date(e.created_at).toLocaleString()}
-                    </td>
+                    <td className="px-4 py-3 text-mist">{formatNaira(e.balance_after_kobo)}</td>
+                    <td className="px-4 py-3 text-mist">{new Date(e.created_at).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -324,5 +303,13 @@ export default function WalletPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function WalletPage() {
+  return (
+    <Suspense fallback={<div className="text-mist">Loading wallet…</div>}>
+      <WalletContent />
+    </Suspense>
   );
 }
