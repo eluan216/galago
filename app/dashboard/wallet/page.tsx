@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useSearchParams } from "next/navigation";
 
 function formatNaira(kobo: number) {
   return new Intl.NumberFormat("en-NG", {
@@ -30,17 +31,26 @@ type CryptoDeposit = {
 };
 
 export default function WalletPage() {
+  const searchParams = useSearchParams();
   const [balance, setBalance] = useState<number | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [deposits, setDeposits] = useState<CryptoDeposit[]>([]);
   const [amount, setAmount] = useState("5000");
+  const [fiatAmount, setFiatAmount] = useState("2000");
   const [loading, setLoading] = useState(false);
+  const [fiatLoading, setFiatLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    if (searchParams.get("deposit") === "success") {
+      setMessage("Deposit successful! Balance updated.");
+    }
+    if (searchParams.get("error")) {
+      setError("Payment could not be completed. Try again.");
+    }
     loadData();
-  }, []);
+  }, [searchParams]);
 
   async function loadData() {
     const supabase = createClient();
@@ -62,7 +72,7 @@ export default function WalletPage() {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(30);
 
     setLedger(entries || []);
 
@@ -116,14 +126,49 @@ export default function WalletPage() {
     }
   }
 
+  async function handleFiatFund() {
+    setFiatLoading(true);
+    setError(null);
+    setMessage(null);
+
+    const ngn = Number(fiatAmount);
+    if (!ngn || ngn < 100) {
+      setError("Minimum is ₦100");
+      setFiatLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/fiat/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount_ngn: ngn }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to start payment");
+        setFiatLoading(false);
+        return;
+      }
+
+      if (data.authorization_url) {
+        window.location.href = data.authorization_url;
+      }
+    } catch {
+      setError("Network error. Try again.");
+      setFiatLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Wallet</h1>
-        <p className="text-mist text-sm mt-1">Fund with Naira or crypto (USDT)</p>
+        <p className="text-mist text-sm mt-1">Fund with Naira (Paystack) or crypto (USDT)</p>
       </div>
 
-      {/* Balance */}
       <div className="bg-bush border border-bush rounded-2xl p-6">
         <p className="text-mist text-sm">Available balance</p>
         <p className="text-3xl font-bold mt-1 tracking-tight">
@@ -131,24 +176,53 @@ export default function WalletPage() {
         </p>
       </div>
 
-      {/* Fund with Crypto */}
+      {error && (
+        <div className="p-3 rounded-lg bg-danger/10 border border-danger/30 text-danger text-sm">
+          {error}
+        </div>
+      )}
+      {message && (
+        <div className="p-3 rounded-lg bg-success/10 border border-success/30 text-success text-sm">
+          {message}
+        </div>
+      )}
+
+      {/* Fiat */}
+      <div className="bg-bush border border-bush rounded-2xl p-6">
+        <h2 className="font-medium mb-1">Fund with Naira</h2>
+        <p className="text-mist text-sm mb-4">
+          Card, bank transfer, USSD via Paystack.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <label className="block text-sm text-mist mb-1.5">Amount (NGN)</label>
+            <input
+              type="number"
+              value={fiatAmount}
+              onChange={(e) => setFiatAmount(e.target.value)}
+              min={100}
+              step={100}
+              className="w-full bg-night border border-mist/20 rounded-xl px-4 py-3 text-moon focus:outline-none focus:border-gold/60 transition"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={handleFiatFund}
+              disabled={fiatLoading}
+              className="w-full sm:w-auto bg-gold text-night font-semibold px-6 py-3 rounded-xl hover:bg-gold-glow transition disabled:opacity-60"
+            >
+              {fiatLoading ? "Redirecting…" : "Pay with Paystack"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Crypto */}
       <div className="bg-bush border border-bush rounded-2xl p-6">
         <h2 className="font-medium mb-1">Fund with Crypto (USDT)</h2>
         <p className="text-mist text-sm mb-4">
           Send USDT on TRC20. We convert and credit your Naira wallet.
         </p>
-
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-danger/10 border border-danger/30 text-danger text-sm">
-            {error}
-          </div>
-        )}
-        {message && (
-          <div className="mb-4 p-3 rounded-lg bg-success/10 border border-success/30 text-success text-sm">
-            {message}
-          </div>
-        )}
-
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="block text-sm text-mist mb-1.5">Amount (NGN)</label>
@@ -165,21 +239,20 @@ export default function WalletPage() {
             <button
               onClick={handleCryptoFund}
               disabled={loading}
-              className="w-full sm:w-auto bg-gold text-night font-semibold px-6 py-3 rounded-xl hover:bg-gold-glow transition disabled:opacity-60"
+              className="w-full sm:w-auto border border-gold/50 text-gold font-semibold px-6 py-3 rounded-xl hover:bg-gold/10 transition disabled:opacity-60"
             >
               {loading ? "Creating invoice…" : "Pay with USDT"}
             </button>
           </div>
         </div>
         <p className="text-mist text-xs mt-3">
-          Minimum ₦1,000. Network: TRC20 (low fees). Do not send other coins or networks.
+          Minimum ₦1,000. Network: TRC20. Do not send other coins or networks.
         </p>
       </div>
 
-      {/* Pending crypto deposits */}
       {deposits.filter((d) => d.status === "pending" || d.status === "confirming").length > 0 && (
         <div>
-          <h2 className="font-medium mb-3">Pending deposits</h2>
+          <h2 className="font-medium mb-3">Pending crypto deposits</h2>
           <div className="space-y-2">
             {deposits
               .filter((d) => d.status === "pending" || d.status === "confirming")
@@ -210,7 +283,6 @@ export default function WalletPage() {
         </div>
       )}
 
-      {/* Ledger */}
       <div>
         <h2 className="font-medium mb-3">Transaction history</h2>
         {ledger.length === 0 ? (
@@ -229,7 +301,7 @@ export default function WalletPage() {
               <tbody>
                 {ledger.map((e) => (
                   <tr key={e.id} className="border-b border-night/50 last:border-0">
-                    <td className="px-4 py-3 capitalize">{e.type.replace("_", " ")}</td>
+                    <td className="px-4 py-3 capitalize">{e.type.replace(/_/g, " ")}</td>
                     <td
                       className={`px-4 py-3 font-mono ${
                         e.amount_kobo >= 0 ? "text-success" : "text-danger"
