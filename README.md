@@ -2,82 +2,51 @@
 
 **Galago — the bushbaby.** African, nocturnal, enormous eyes. Grow while you sleep.
 
-Nigerian digital marketplace connect platform. Unified Naira wallet for:
-- Social media growth (real engagement)
-- Airtime / Data / Bills (VTU)
-- Virtual numbers & OTP
-- Gift cards, virtual cards, game top-ups
-- eSIM
-- Reseller / white-label / API
-- **Crypto funding (USDT + more)**
-
-Domain target: **galago.ng**
+Nigerian digital marketplace. Unified Naira wallet for social growth, VTU, numbers, cards, eSIM + **crypto & fiat funding**.
 
 ---
 
-## Current Status (Nov 2026)
+## Current Status
 
 | Area | Status |
 |------|--------|
 | GitHub + Vercel + Supabase | Connected |
-| Brand kit + design tokens | Done |
-| Database schema (wallet, ledger, crypto, orders) | Live |
-| Next.js 15 scaffold + dark theme | Done |
+| Brand + dark theme | Done |
+| Schema (wallet, ledger, crypto, orders, catalog) | Live + seeded |
 | Auth (email + Google) | Done |
 | Dashboard + Wallet UI | Done |
-| Crypto (NOWPayments) create + webhook | Done |
-| Fiat funding (Paystack) | Next |
-| Catalog + order placement | Next |
-| Reseller API | Later |
+| Crypto funding (NOWPayments USDT) | Done |
+| **Fiat funding (Paystack)** | Done |
+| **Service catalog + New Order** | Done |
+| **Hold → Settle order logic** | Done |
+| Reseller API | Next |
+| Real provider adapters | Next |
 
 ---
 
-## Brand Kit
+## How money works
 
-### Colors (dark-first)
-| Token | Hex | Use |
-|-------|-----|-----|
-| Night Black | `#0B0F14` | Background |
-| Bush Deep | `#121A22` | Cards / surfaces |
-| Galago Gold | `#E8B923` | Primary accent / CTAs |
-| Amber Glow | `#F5C84B` | Hover |
-| Moon White | `#F4F1EA` | Primary text |
-| Mist | `#A8B2C1` | Secondary text |
-| Success | `#2DD4A8` | Positive |
-| Danger | `#F87171` | Errors |
+1. **Fund** wallet with Paystack (card/bank/USSD) or USDT (TRC20).
+2. **Place order** → funds are **held** (deducted + ledger `hold`).
+3. When delivery is confirmed → order moves to `completed` (settle).
+4. If order fails → release path can return funds (to be expanded).
 
-### Typography
-- Headings: Outfit / Sora
-- Body: Inter / Geist
-- Mono: JetBrains Mono
+All amounts are stored in **kobo** (integer).
 
 ---
 
-## Architecture
-
-See `docs/architecture.md` for the full design.
-
-**Core idea**: Single Naira wallet. Crypto (and later fiat) only funds the wallet. All services debit the same balance. Hold-until-delivered for orders.
-
-### Crypto flow
-1. User enters amount → `/api/crypto/create-invoice`
-2. NOWPayments invoice created (USDT-TRC20 preferred)
-3. Webhook confirms → credit wallet + immutable ledger entry
-
----
-
-## Local setup
+## Quick start
 
 ```bash
 git clone https://github.com/eluan216/galago.git
 cd galago
 cp .env.example .env.local
-# fill in Supabase + NOWPayments keys
+# fill keys
 npm install
 npm run dev
 ```
 
-Required env vars:
+Required env:
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
@@ -85,14 +54,26 @@ SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_APP_URL=
 NOWPAYMENTS_API_KEY=
 NOWPAYMENTS_IPN_SECRET=
+PAYSTACK_SECRET_KEY=
 ```
 
 ---
 
-## Project links
+## Key routes
 
-- Repo: https://github.com/eluan216/galago
-- Supabase: `uqqxtdrjjvmzfqoycpdt` (eu-west-1)
-- Vercel: linked to main branch
+- `/` — Landing
+- `/auth/signin` · `/auth/signup`
+- `/dashboard` — Overview
+- `/dashboard/wallet` — Fund (Paystack + USDT) + ledger
+- `/dashboard/orders` — List
+- `/dashboard/orders/new` — Place order (hold funds)
+
+API:
+- `POST /api/fiat/initialize` · `GET /api/fiat/callback`
+- `POST /api/crypto/create-invoice` · `POST /api/crypto/webhook`
+- `POST /api/orders/create`
+- `POST /api/orders/[id]/complete`
+
+---
 
 Built for speed, real delivery, and African scale.
