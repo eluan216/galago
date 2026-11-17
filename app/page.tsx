@@ -2,229 +2,178 @@ import Link from "next/link";
 import { GalagoMark, GalagoWordmark } from "@/components/logo";
 
 /**
- * Galago marketing landing
- * Restraint Design + stronger craft:
- * - Custom bushbaby mark (large eyes, gold iris)
- * - Hero hierarchy by type, not color noise
- * - One gold for primary action only
- * - Inset surfaces, quiet chrome
+ * Galago landing — de-slopped
+ * Direction: nocturnal restraint
+ * Layout: monument hero (not dual-CTA SaaS)
+ * Signature: bushbaby mark + hold-until-delivered
+ * Banned: three equal feature cards, decorative 01/02/03, dual hero CTAs
  */
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* Ambient night glow — subtle, not a gradient wash */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(232,185,35,0.07), transparent 55%), radial-gradient(ellipse 60% 40% at 80% 60%, rgba(45,212,168,0.03), transparent 50%)",
-        }}
-      />
-
-      {/* Header */}
-      <header className="relative z-10 border-b border-white/[0.06] px-5 sm:px-8 py-4 flex items-center justify-between">
+    <main className="min-h-screen flex flex-col bg-night text-moon">
+      <header className="border-b border-white/[0.06] px-5 sm:px-8 h-14 flex items-center justify-between">
         <Link href="/" className="hover:opacity-90 transition-opacity">
           <GalagoWordmark />
         </Link>
-        <nav className="flex items-center gap-1 sm:gap-2 text-[13px]">
-          <Link
-            href="/auth/signin"
-            className="text-mist hover:text-moon px-3 py-1.5 transition-colors"
-          >
+        <nav className="flex items-center gap-3 text-[13px]">
+          <Link href="/auth/signin" className="text-mist hover:text-moon transition-colors">
             Sign in
           </Link>
           <Link
             href="/auth/signup"
-            className="bg-moon text-night px-3.5 py-1.5 rounded-full font-medium hover:bg-white transition-colors"
+            className="text-night bg-moon px-3.5 py-1.5 rounded-full font-medium hover:bg-white transition-colors"
           >
-            Get started
+            Open wallet
           </Link>
         </nav>
       </header>
 
-      {/* Hero */}
-      <section className="relative flex-1 flex flex-col items-center justify-center px-5 pt-20 pb-24 sm:pt-28 sm:pb-32 text-center">
-        <div className="mb-8 flex justify-center">
-          <div className="relative">
-            <GalagoMark className="w-16 h-16 sm:w-20 sm:h-20" />
-            <div
-              aria-hidden
-              className="absolute inset-0 rounded-full blur-2xl -z-10 opacity-40"
-              style={{ background: "rgba(232,185,35,0.25)" }}
-            />
-          </div>
-        </div>
+      {/* Monument hero — one mark, one line, one CTA */}
+      <section className="px-5 sm:px-8 pt-16 sm:pt-24 pb-20 sm:pb-28">
+        <div className="max-w-2xl">
+          <GalagoMark className="w-14 h-14 sm:w-16 sm:h-16 mb-8" />
 
-        <p className="text-[11px] font-medium tracking-[0.22em] uppercase text-mist mb-5">
-          Nigeria · Night shift marketplace
-        </p>
+          <h1 className="text-[2.5rem] sm:text-[3.25rem] font-semibold tracking-[-0.035em] leading-[1.05] text-moon">
+            Grow while you sleep
+          </h1>
 
-        <h1 className="text-[2.35rem] sm:text-5xl md:text-[3.25rem] font-semibold tracking-[-0.03em] leading-[1.08] max-w-[14ch] text-moon text-balance">
-          Grow while you sleep
-        </h1>
-
-        <p className="mt-5 text-[15px] sm:text-base leading-relaxed text-mist max-w-md text-balance">
-          One Naira wallet for real engagement, airtime, virtual numbers, and
-          cards. Fund with Paystack or USDT. Orders keep moving after you close
-          the laptop.
-        </p>
-
-        <div className="mt-10 flex flex-wrap gap-3 justify-center">
-          <Link
-            href="/auth/signup"
-            className="bg-gold text-night px-7 py-2.5 rounded-full text-[13px] font-semibold hover:brightness-110 transition shadow-[0_0_0_1px_rgba(232,185,35,0.3)]"
-          >
-            Start free
-          </Link>
-          <Link
-            href="/auth/signin"
-            className="border border-white/[0.1] text-moon px-7 py-2.5 rounded-full text-[13px] font-medium hover:border-white/25 transition"
-          >
-            Sign in
-          </Link>
-        </div>
-
-        <p className="mt-8 text-[12px] text-mist/80">
-          Hold-until-delivered · Crypto + Naira · Built for resellers
-        </p>
-      </section>
-
-      {/* Pillars */}
-      <section className="relative border-t border-white/[0.06] px-5 sm:px-8 py-16 sm:py-20">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-[11px] font-medium tracking-[0.18em] uppercase text-mist text-center mb-10">
-            Why Galago
+          <p className="mt-5 text-[15px] sm:text-[16px] leading-relaxed text-mist max-w-lg">
+            Naira wallet for real social delivery, airtime, virtual numbers, and
+            cards. Fund with Paystack or USDT. We hold your money until the order
+            actually lands.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-            {[
-              {
-                kicker: "Wallet",
-                title: "Fund once",
-                body: "Naira via Paystack or USDT on TRC20. One balance across every service.",
-              },
-              {
-                kicker: "Trust",
-                title: "Hold until real",
-                body: "We reserve funds when you order. Settle only when delivery lands.",
-              },
-              {
-                kicker: "Night",
-                title: "Works while you sleep",
-                body: "Bushbaby energy: small, sharp, nocturnal. Campaigns keep running after midnight.",
-              },
-            ].map((item) => (
-              <div
-                key={item.kicker}
-                className="bg-surface border border-white/[0.06] rounded-card p-5 sm:p-6 text-left"
-              >
-                <p className="text-gold text-[11px] font-medium tracking-wide">
-                  {item.kicker}
-                </p>
-                <h3 className="text-[15px] font-medium text-moon mt-2">
-                  {item.title}
-                </h3>
-                <p className="text-mist text-[13px] mt-2 leading-relaxed">
-                  {item.body}
-                </p>
-              </div>
-            ))}
+
+          <div className="mt-9">
+            <Link
+              href="/auth/signup"
+              className="inline-flex items-center bg-gold text-night text-[13px] font-semibold px-6 py-2.5 rounded-full hover:brightness-110 transition"
+            >
+              Open your wallet
+            </Link>
           </div>
+
+          <p className="mt-6 text-[12px] text-mist">
+            Built for Nigerian resellers · Port Harcourt roots
+          </p>
         </div>
       </section>
 
-      {/* Services */}
-      <section className="relative border-t border-white/[0.06] px-5 sm:px-8 py-16 sm:py-20">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-[11px] font-medium tracking-[0.18em] uppercase text-mist mb-3">
-              Catalog
-            </p>
-            <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-moon">
-              What you can run tonight
+      {/* Product truth — uneven, not three equal cards */}
+      <section className="border-t border-white/[0.06] px-5 sm:px-8 py-14 sm:py-16">
+        <div className="max-w-3xl grid grid-cols-1 sm:grid-cols-12 gap-6">
+          <div className="sm:col-span-7 bg-surface border border-white/[0.06] rounded-card p-6 sm:p-7">
+            <h2 className="text-[17px] font-medium text-moon tracking-tight">
+              Hold until delivered
             </h2>
+            <p className="mt-3 text-[14px] leading-relaxed text-mist">
+              When you place an order, the exact amount is reserved on your
+              ledger. Nothing settles until delivery confirms. If it fails, the
+              hold releases. That is the contract — not a marketing line.
+            </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              ["Social",
-                "Followers, likes, views — real delivery tiers"],
-              ["VTU",
-                "Airtime & data for major Nigerian networks"],
-              ["Numbers",
-                "Virtual SMS numbers for verification"],
-              ["Cards & eSIM",
-                "Digital cards and travel connectivity"],
-            ].map(([title, desc]) => (
-              <div
-                key={title}
-                className="bg-surface border border-white/[0.06] rounded-card p-4 sm:p-5"
-              >
-                <h3 className="text-[13px] font-medium text-moon">{title}</h3>
-                <p className="text-mist text-[12px] mt-1.5 leading-snug">{desc}</p>
-              </div>
-            ))}
+          <div className="sm:col-span-5 flex flex-col gap-6">
+            <div className="bg-surface border border-white/[0.06] rounded-card p-5">
+              <h3 className="text-[14px] font-medium text-moon">One balance</h3>
+              <p className="mt-2 text-[13px] leading-relaxed text-mist">
+                Paystack (Naira) or USDT-TRC20. Same wallet for every service.
+              </p>
+            </div>
+            <div className="bg-surface border border-white/[0.06] rounded-card p-5">
+              <h3 className="text-[14px] font-medium text-moon">Night ops</h3>
+              <p className="mt-2 text-[13px] leading-relaxed text-mist">
+                Campaigns keep running after you close the laptop. Bushbaby
+                hours.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="relative border-t border-white/[0.06] px-5 sm:px-8 py-16 sm:py-20">
-        <div className="max-w-2xl mx-auto">
-          <p className="text-[11px] font-medium tracking-[0.18em] uppercase text-mist text-center mb-10">
-            Flow
-          </p>
-          <ol className="space-y-0">
+      {/* Catalog — dense list, not icon-card grid */}
+      <section className="border-t border-white/[0.06] px-5 sm:px-8 py-14 sm:py-16">
+        <div className="max-w-3xl">
+          <h2 className="text-[13px] font-medium text-mist mb-6">What runs on Galago</h2>
+          <ul className="divide-y divide-white/[0.06] border-y border-white/[0.06]">
             {[
-              ["01", "Create account", "Sign up in under a minute. Wallet opens at zero."],
-              ["02", "Fund wallet", "Paystack (Naira) or USDT. Instant ledger entry."],
-              ["03", "Place order", "Pick a service. We hold the exact amount."],
-              ["04", "Delivery settles", "When it lands, the hold becomes a charge."],
-            ].map(([n, title, body], i) => (
+              ["Social delivery", "Followers, likes, views — tiered quality, held until real"],
+              ["VTU", "Airtime and data on major Nigerian networks"],
+              ["Virtual numbers", "SMS numbers for verification flows"],
+              ["Cards & eSIM", "Digital cards and travel connectivity"],
+            ].map(([name, detail]) => (
               <li
-                key={n}
-                className={`flex gap-4 sm:gap-6 py-5 ${
-                  i < 3 ? "border-b border-white/[0.06]" : ""
-                }`}
+                key={name}
+                className="py-4 flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 sm:gap-8"
               >
-                <span className="text-gold text-[13px] font-medium tabular-nums w-6 shrink-0 pt-0.5">
-                  {n}
+                <span className="text-[14px] font-medium text-moon">{name}</span>
+                <span className="text-[13px] text-mist sm:text-right max-w-md">
+                  {detail}
                 </span>
-                <div>
-                  <h3 className="text-[15px] font-medium text-moon">{title}</h3>
-                  <p className="text-mist text-[13px] mt-1">{body}</p>
-                </div>
               </li>
             ))}
-          </ol>
+          </ul>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="relative border-t border-white/[0.06] px-5 sm:px-8 py-16 sm:py-24">
-        <div className="max-w-lg mx-auto text-center">
-          <GalagoMark className="w-12 h-12 mx-auto mb-6" />
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-moon text-balance">
+      {/* How money moves — sequence without decorative numbering chrome */}
+      <section className="border-t border-white/[0.06] px-5 sm:px-8 py-14 sm:py-16">
+        <div className="max-w-3xl">
+          <h2 className="text-[13px] font-medium text-mist mb-8">How money moves</h2>
+          <div className="space-y-8">
+            {[
+              [
+                "Fund",
+                "Top up with Paystack or USDT. Credit hits the ledger in kobo.",
+              ],
+              [
+                "Order",
+                "Pick a service and quantity. We hold the full amount immediately.",
+              ],
+              [
+                "Settle",
+                "When delivery lands, the hold becomes a charge. Failures release funds.",
+              ],
+            ].map(([title, body]) => (
+              <div key={title} className="flex gap-5">
+                <div className="w-px bg-white/[0.08] relative">
+                  <span className="absolute top-1.5 -left-[3px] w-1.5 h-1.5 rounded-full bg-gold" />
+                </div>
+                <div className="pb-1">
+                  <h3 className="text-[14px] font-medium text-moon">{title}</h3>
+                  <p className="mt-1 text-[13px] text-mist leading-relaxed max-w-md">
+                    {body}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Close */}
+      <section className="border-t border-white/[0.06] px-5 sm:px-8 py-16 sm:py-20">
+        <div className="max-w-xl">
+          <h2 className="text-2xl sm:text-[1.75rem] font-semibold tracking-tight text-moon">
             Small. Sharp. Awake at night.
           </h2>
-          <p className="mt-3 text-mist text-[14px] leading-relaxed">
-            Galago is the bushbaby — Africa&apos;s nocturnal climber with enormous
-            eyes. Not an owl. Built to work while you rest.
+          <p className="mt-3 text-[14px] text-mist leading-relaxed">
+            Galago is the bushbaby — Africa&apos;s nocturnal climber with
+            enormous eyes. Not an owl. The wallet that works while you rest.
           </p>
           <Link
             href="/auth/signup"
-            className="inline-block mt-8 bg-gold text-night px-8 py-2.5 rounded-full text-[13px] font-semibold hover:brightness-110 transition"
+            className="inline-flex mt-8 bg-gold text-night text-[13px] font-semibold px-6 py-2.5 rounded-full hover:brightness-110 transition"
           >
             Open your wallet
           </Link>
         </div>
       </section>
 
-      <footer className="relative border-t border-white/[0.06] px-5 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px] text-mist">
+      <footer className="border-t border-white/[0.06] px-5 sm:px-8 py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[12px] text-mist">
         <div className="flex items-center gap-2">
           <GalagoMark className="w-5 h-5" />
           <span>© {new Date().getFullYear()} Galago</span>
         </div>
-        <span className="opacity-70">galago.ng · Port Harcourt roots</span>
+        <span>galago.ng</span>
       </footer>
     </main>
   );
