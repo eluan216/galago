@@ -3,18 +3,17 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Galago — Grow while you sleep",
-  description: "Nigerian digital marketplace. Unified wallet for social growth, VTU, virtual numbers, cards, eSIM & crypto funding.",
+  description:
+    "Nigerian digital marketplace. Unified wallet for social growth, VTU, virtual numbers, cards, eSIM — fund with Naira or crypto.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0B0F14",
+  themeColor: "#0A0C10",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen bg-night text-moon antialiased">

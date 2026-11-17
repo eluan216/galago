@@ -9,20 +9,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        night: "#0B0F14",
-        bush: "#121A22",
+        night: "#0A0C10",
+        surface: {
+          DEFAULT: "#12161C",
+          2: "#181C24",
+        },
+        border: "rgba(255,255,255,0.06)",
+        moon: "#F2F0EA",
+        mist: "#8B93A7",
         gold: {
           DEFAULT: "#E8B923",
-          glow: "#F5C84B",
+          soft: "rgba(232,185,35,0.12)",
         },
-        moon: "#F4F1EA",
-        mist: "#A8B2C1",
         success: "#2DD4A8",
         danger: "#F87171",
+        // legacy aliases used in older pages
+        bush: "#12161C",
       },
-      fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
+      borderRadius: {
+        card: "8px",
+      },
+      fontSize: {
+        display: ["2.75rem", { lineHeight: "1.1", letterSpacing: "-0.03em", fontWeight: "600" }],
+      },
+      transitionDuration: {
+        DEFAULT: "160ms",
       },
     },
   },

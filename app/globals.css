@@ -2,21 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Galago Design Map — restraint dark system */
 :root {
-  --background: #0B0F14;
-  --foreground: #F4F1EA;
-  --card: #121A22;
-  --primary: #E8B923;
-  --primary-hover: #F5C84B;
-  --muted: #A8B2C1;
-  --success: #2DD4A8;
-  --danger: #F87171;
+  --night: #0a0c10;
+  --surface: #12161c;
+  --surface-2: #181c24;
+  --border: rgba(255, 255, 255, 0.06);
+  --moon: #f2f0ea;
+  --mist: #8b93a7;
+  --gold: #e8b923;
+  --gold-soft: rgba(232, 185, 35, 0.12);
+  --success: #2dd4a8;
+  --danger: #f87171;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--night);
+  color: var(--moon);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Inset depth — preferred over drop shadow */
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.surface-2 {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 
 @layer utilities {
