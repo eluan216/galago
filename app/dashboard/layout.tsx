@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { GalagoMark } from "@/components/logo";
 
-/**
- * Dashboard shell — quiet chrome, clear nav, restraint borders.
- */
 export default async function DashboardLayout({
   children,
 }: {
@@ -28,11 +26,9 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen flex flex-col bg-night">
       <header className="border-b border-white/[0.06] px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-50 bg-night/90 backdrop-blur-md">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gold flex items-center justify-center text-night font-semibold text-[10px]">
-              G
-            </div>
+        <div className="flex items-center gap-5">
+          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <GalagoMark className="w-6 h-6" />
             <span className="font-medium text-[13px] hidden sm:inline text-moon">
               galago
             </span>
