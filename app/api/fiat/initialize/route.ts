@@ -1,3 +1,10 @@
+/**
+ * POST /api/fiat/initialize
+ * ------------------------
+ * Starts a Paystack payment so the user can fund their Naira wallet.
+ * On success Paystack redirects to /api/fiat/callback which credits the wallet.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { initializePaystackTransaction } from "@/lib/paystack";
@@ -25,10 +32,8 @@ export async function POST(req: NextRequest) {
     }
 
     const amountKobo = Math.round(amount_ngn * 100);
+    // Unique reference so we can detect double-credits later
     const reference = `galago_${user.id.slice(0, 8)}_${randomUUID().slice(0, 12)}`;
-
-    // Record pending deposit (we can reuse crypto_deposits pattern or a fiat_deposits table later)
-    // For simplicity we use a ledger pending approach via metadata on success
 
     const init = await initializePaystackTransaction({
       email: user.email!,

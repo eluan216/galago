@@ -1,3 +1,19 @@
+/**
+ * POST /api/orders/create
+ * ----------------------
+ * Places a new order and HOLDS funds from the user's Naira wallet.
+ *
+ * Flow:
+ *  1. Validate offer + quantity
+ *  2. Check wallet balance
+ *  3. Deduct (hold) the amount with an optimistic lock
+ *  4. Create the order with status "held"
+ *  5. Write a ledger entry of type "hold"
+ *  6. Write an order event
+ *
+ * Funds stay held until the order is completed, partially settled, or released.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { randomUUID } from "crypto";
@@ -23,7 +39,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Load offer
+    // Load the offer (must be active)
     const { data: offer, error: offerErr } = await supabase
       .from("offers")
       .select("*, services(name, platform_id)")
@@ -47,7 +63,7 @@ export async function POST(req: NextRequest) {
     const amountKobo = offer.rate_kobo * quantity;
     const key = idempotency_key || randomUUID();
 
-    // Check for existing order with same idempotency key
+    // Idempotency: if this key was already used, return the existing order
     const { data: existing } = await supabase
       .from("orders")
       .select("id, status")
@@ -58,7 +74,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ order_id: existing.id, status: existing.status });
     }
 
-    // Get wallet
+    // Load wallet
     const { data: wallet } = await supabase
       .from("wallets")
       .select("*")
@@ -72,14 +88,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hold funds (deduct immediately, record as hold)
+    // Hold funds (optimistic lock on current balance to avoid double-spend races)
     const newBalance = wallet.balance_kobo - amountKobo;
 
     const { error: walletErr } = await supabase
       .from("wallets")
       .update({ balance_kobo: newBalance, updated_at: new Date().toISOString() })
       .eq("id", wallet.id)
-      .eq("balance_kobo", wallet.balance_kobo); // optimistic lock
+      .eq("balance_kobo", wallet.balance_kobo); // only succeed if balance hasn't changed
 
     if (walletErr) {
       return NextResponse.json(
@@ -88,7 +104,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create order
+    // Create the order in "held" status
     const { data: order, error: orderErr } = await supabase
       .from("orders")
       .insert({
@@ -110,7 +126,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (orderErr || !order) {
-      // Rollback hold
+      // Rollback the hold if order creation fails
       await supabase
         .from("wallets")
         .update({ balance_kobo: wallet.balance_kobo })
@@ -123,7 +139,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ledger: hold
+    // Immutable ledger entry for the hold
     await supabase.from("ledger_entries").insert({
       wallet_id: wallet.id,
       user_id: user.id,
@@ -135,15 +151,14 @@ export async function POST(req: NextRequest) {
       description: `Hold for order ${order.id.slice(0, 8)}`,
     });
 
-    // Order event
+    // Audit trail
     await supabase.from("order_events").insert({
       order_id: order.id,
       status: "held",
       note: "Funds held. Awaiting provider dispatch.",
     });
 
-    // In production: dispatch to provider adapter here
-    // For now leave as "held" / move to "processing" manually or via worker
+    // TODO: dispatch to real SMM / VTU provider adapter here
 
     return NextResponse.json({
       order_id: order.id,

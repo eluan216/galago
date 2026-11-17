@@ -1,3 +1,10 @@
+/**
+ * Browser-side Supabase client
+ * ---------------------------
+ * Use this in Client Components ("use client").
+ * It talks to Supabase using the public anon key and manages the session in the browser.
+ */
+
 import { createBrowserClient } from "@supabase/ssr";
 
 export function createClient() {

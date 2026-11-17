@@ -1,7 +1,15 @@
+/**
+ * GET /api/fiat/callback
+ * ---------------------
+ * Paystack redirects here after payment.
+ * We verify the transaction, credit the wallet once (idempotent), and redirect the user.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyPaystackTransaction } from "@/lib/paystack";
 
+// Service-role client bypasses RLS so we can credit any user's wallet from the callback
 function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,7 +18,9 @@ function getServiceClient() {
 }
 
 export async function GET(req: NextRequest) {
-  const reference = req.nextUrl.searchParams.get("reference") || req.nextUrl.searchParams.get("trxref");
+  const reference =
+    req.nextUrl.searchParams.get("reference") ||
+    req.nextUrl.searchParams.get("trxref");
 
   if (!reference) {
     return NextResponse.redirect(
@@ -38,7 +48,7 @@ export async function GET(req: NextRequest) {
 
     const supabase = getServiceClient();
 
-    // Idempotency: check if we already credited this reference
+    // Idempotency: skip if we already credited this reference
     const { data: existing } = await supabase
       .from("ledger_entries")
       .select("id")

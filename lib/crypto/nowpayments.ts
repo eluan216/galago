@@ -1,21 +1,30 @@
 /**
- * NOWPayments integration stub for Galago crypto deposits.
- * Docs: https://nowpayments.io/api
+ * NOWPayments helpers (crypto funding)
+ * ------------------------------------
+ * Create an invoice so the user can pay with USDT (or other coins).
+ * On success we credit the Naira wallet via the webhook handler.
+ *
+ * Env required:
+ *   NOWPAYMENTS_API_KEY
+ *   NOWPAYMENTS_IPN_SECRET (for webhook signature verification)
+ *
+ * Preferred network in Nigeria: USDT-TRC20 (low fees).
  */
 
 const NOWPAYMENTS_API = "https://api.nowpayments.io/v1";
 
 export type CreateInvoiceParams = {
-  price_amount: number; // in USD or the fiat you choose
+  price_amount: number; // amount in the price currency (e.g. USD)
   price_currency: string; // "usd" or "ngn"
-  pay_currency?: string; // "usdttrc20" preferred
-  order_id: string; // our crypto_deposits.id
+  pay_currency?: string; // e.g. "usdttrc20"
+  order_id: string; // our crypto_deposits.id — returned in the webhook
   order_description?: string;
-  ipn_callback_url: string;
+  ipn_callback_url: string; // webhook URL
   success_url?: string;
   cancel_url?: string;
 };
 
+/** Create a NOWPayments invoice and return the payment page URL. */
 export async function createNowPaymentsInvoice(params: CreateInvoiceParams) {
   const apiKey = process.env.NOWPAYMENTS_API_KEY;
   if (!apiKey) throw new Error("NOWPAYMENTS_API_KEY is not set");
@@ -38,17 +47,18 @@ export async function createNowPaymentsInvoice(params: CreateInvoiceParams) {
     id: string;
     invoice_url: string;
     order_id: string;
-    // ... other fields
   }>;
 }
 
+/**
+ * Verify the IPN (webhook) signature from NOWPayments.
+ * TODO: implement full HMAC check with NOWPAYMENTS_IPN_SECRET before production traffic.
+ */
 export function verifyNowPaymentsIPN(
   body: unknown,
   signature: string | null
 ): boolean {
-  // TODO: implement HMAC verification with NOWPAYMENTS_IPN_SECRET
-  // See: https://documenter.getpostman.com/view/7907941/S1a32n38#invoice-payment
   if (!signature || !process.env.NOWPAYMENTS_IPN_SECRET) return false;
-  // Placeholder — implement proper check before production
+  // Placeholder — replace with real HMAC verification
   return true;
 }

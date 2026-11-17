@@ -1,3 +1,10 @@
+/**
+ * POST /api/crypto/create-invoice
+ * -------------------------------
+ * Creates a NOWPayments invoice so the user can fund their wallet with USDT.
+ * On confirmation the webhook credits the Naira balance.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createNowPaymentsInvoice } from "@/lib/crypto/nowpayments";
@@ -23,7 +30,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Create pending deposit record
+    // Record a pending deposit first so we have an order_id for the invoice
     const { data: deposit, error } = await supabase
       .from("crypto_deposits")
       .insert({
@@ -45,8 +52,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Approximate USD for invoice (you can lock a better rate later)
-    const approxUsd = amount_ngn / 1600; // placeholder rate — replace with live rate
+    // Rough USD conversion for the invoice (replace with live rate later)
+    const approxUsd = amount_ngn / 1600;
 
     const invoice = await createNowPaymentsInvoice({
       price_amount: approxUsd,
@@ -59,7 +66,7 @@ export async function POST(req: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/wallet?deposit=cancelled`,
     });
 
-    // Update deposit with provider data
+    // Store the invoice details on the deposit row
     await supabase
       .from("crypto_deposits")
       .update({

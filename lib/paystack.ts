@@ -1,10 +1,17 @@
 /**
- * Paystack integration for Galago fiat funding.
- * Docs: https://paystack.com/docs/api
+ * Paystack helpers (fiat funding)
+ * ------------------------------
+ * Initialize a payment and verify a completed transaction.
+ * Amounts are always in kobo (1 NGN = 100 kobo).
+ *
+ * Env required: PAYSTACK_SECRET_KEY
  */
 
 const PAYSTACK_API = "https://api.paystack.co";
 
+/**
+ * Start a Paystack transaction and return the authorization URL the user should visit.
+ */
 export async function initializePaystackTransaction(params: {
   email: string;
   amount_kobo: number;
@@ -44,6 +51,9 @@ export async function initializePaystackTransaction(params: {
   };
 }
 
+/**
+ * Verify that a Paystack transaction was successful (call after redirect or webhook).
+ */
 export async function verifyPaystackTransaction(reference: string) {
   const secret = process.env.PAYSTACK_SECRET_KEY;
   if (!secret) throw new Error("PAYSTACK_SECRET_KEY is not set");

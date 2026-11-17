@@ -1,8 +1,14 @@
+/**
+ * POST /api/crypto/webhook
+ * -----------------------
+ * NOWPayments IPN (webhook).
+ * When payment is confirmed we credit the user's Naira wallet and write a ledger entry.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyNowPaymentsIPN } from "@/lib/crypto/nowpayments";
 
-// Service role client for webhook (bypasses RLS)
 function getServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,7 +25,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
-    const { order_id, payment_status, pay_amount, pay_currency, outcome_amount } = body;
+    const { order_id, payment_status, pay_amount, pay_currency, outcome_amount } =
+      body;
 
     if (!order_id) {
       return NextResponse.json({ error: "Missing order_id" }, { status: 400 });
@@ -37,16 +44,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Deposit not found" }, { status: 404 });
     }
 
+    // Already processed — acknowledge and exit
     if (deposit.status === "confirmed") {
-      // Already processed
       return NextResponse.json({ ok: true });
     }
 
     if (payment_status === "finished" || payment_status === "confirmed") {
-      // Credit the wallet
       const amountKobo = deposit.amount_ngn_kobo;
 
-      // Get wallet
       const { data: wallet } = await supabase
         .from("wallets")
         .select("*")
@@ -59,13 +64,11 @@ export async function POST(req: NextRequest) {
 
       const newBalance = wallet.balance_kobo + amountKobo;
 
-      // Update wallet
       await supabase
         .from("wallets")
         .update({ balance_kobo: newBalance, updated_at: new Date().toISOString() })
         .eq("id", wallet.id);
 
-      // Ledger entry
       await supabase.from("ledger_entries").insert({
         wallet_id: wallet.id,
         user_id: deposit.user_id,
@@ -78,7 +81,6 @@ export async function POST(req: NextRequest) {
         metadata: { provider: "nowpayments", pay_amount, pay_currency },
       });
 
-      // Mark deposit confirmed
       await supabase
         .from("crypto_deposits")
         .update({
