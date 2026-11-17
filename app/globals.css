@@ -2,16 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Galago Design Map — nocturnal product system */
+/* Galago Design Map — nocturnal product + Afternow-scale craft */
 :root {
-  --night: #07090c;
-  --night-elevated: #0c0f14;
-  --surface: #11151c;
-  --surface-2: #171b24;
+  --night: #06080b;
+  --night-elevated: #0b0e13;
+  --surface: #10141b;
+  --surface-2: #161b24;
   --border: rgba(255, 255, 255, 0.07);
-  --moon: #f2f0ea;
+  --moon: #f4f2ec;
   --mist: #8b93a7;
   --gold: #e8b923;
+  --gold-bright: #f0c93a;
   --gold-soft: rgba(232, 185, 35, 0.14);
   --success: #2dd4a8;
   --danger: #f87171;
@@ -25,50 +26,38 @@ body {
 }
 
 /*
- * Night-ops background template
- * -----------------------------
- * Not a flat wash and not a purple SaaS gradient.
- * Dot grid + deep vignette + one warm gold ambient.
- * Feels like an operations console after midnight.
+ * Night field — open space like Afternow white, but nocturnal.
+ * Soft ambient only; type and cards do the work.
  */
-.bg-night-ops {
+.bg-night-field {
   background-color: var(--night);
   background-image:
-    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(232, 185, 35, 0.09), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(45, 212, 168, 0.04), transparent 45%),
-    radial-gradient(ellipse 70% 50% at 0% 80%, rgba(139, 147, 167, 0.05), transparent 50%),
-    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
-  background-size:
-    auto,
-    auto,
-    auto,
-    28px 28px;
-  background-attachment: fixed;
-}
-
-.bg-night-ops::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background: radial-gradient(
-    ellipse 100% 100% at 50% 50%,
-    transparent 40%,
-    rgba(0, 0, 0, 0.55) 100%
-  );
+    radial-gradient(ellipse 100% 70% at 70% 0%, rgba(232, 185, 35, 0.07), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 0% 100%, rgba(139, 147, 167, 0.05), transparent 45%);
 }
 
 .surface {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .surface-2 {
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
+}
+
+/* Case-study style service card */
+.case-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.case-card:hover {
+  border-color: rgba(232, 185, 35, 0.35);
+  background: var(--surface-2);
 }
 
 @layer utilities {
