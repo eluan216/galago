@@ -2,16 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Galago Design Map — restraint dark system */
+/* Galago Design Map — nocturnal product system */
 :root {
-  --night: #0a0c10;
-  --surface: #12161c;
-  --surface-2: #181c24;
-  --border: rgba(255, 255, 255, 0.06);
+  --night: #07090c;
+  --night-elevated: #0c0f14;
+  --surface: #11151c;
+  --surface-2: #171b24;
+  --border: rgba(255, 255, 255, 0.07);
   --moon: #f2f0ea;
   --mist: #8b93a7;
   --gold: #e8b923;
-  --gold-soft: rgba(232, 185, 35, 0.12);
+  --gold-soft: rgba(232, 185, 35, 0.14);
   --success: #2dd4a8;
   --danger: #f87171;
 }
@@ -23,17 +24,51 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Inset depth — preferred over drop shadow */
+/*
+ * Night-ops background template
+ * -----------------------------
+ * Not a flat wash and not a purple SaaS gradient.
+ * Dot grid + deep vignette + one warm gold ambient.
+ * Feels like an operations console after midnight.
+ */
+.bg-night-ops {
+  background-color: var(--night);
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(232, 185, 35, 0.09), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(45, 212, 168, 0.04), transparent 45%),
+    radial-gradient(ellipse 70% 50% at 0% 80%, rgba(139, 147, 167, 0.05), transparent 50%),
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.045) 1px, transparent 0);
+  background-size:
+    auto,
+    auto,
+    auto,
+    28px 28px;
+  background-attachment: fixed;
+}
+
+.bg-night-ops::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+
 .surface {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .surface-2 {
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 @layer utilities {
