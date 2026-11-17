@@ -25,6 +25,9 @@ function formatNaira(kobo: number) {
   }).format(kobo / 100);
 }
 
+const inputClass =
+  "w-full bg-night border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-[14px] text-moon focus:outline-none focus:border-gold/40 transition";
+
 export default function NewOrderPage() {
   const router = useRouter();
   const [platforms, setPlatforms] = useState<Platform[]>([]);
@@ -65,7 +68,9 @@ export default function NewOrderPage() {
 
     const { data: offs } = await supabase
       .from("offers")
-      .select("id, name, rate_kobo, min_qty, max_qty, quality_tier, service_id, services(name, platform_id, action)")
+      .select(
+        "id, name, rate_kobo, min_qty, max_qty, quality_tier, service_id, services(name, platform_id, action)"
+      )
       .eq("is_active", true);
     setOffers((offs as any) || []);
   }
@@ -111,33 +116,41 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="max-w-md space-y-6">
       <div>
-        <Link href="/dashboard/orders" className="text-mist text-sm hover:text-moon">
+        <Link
+          href="/dashboard/orders"
+          className="text-mist text-[12px] hover:text-moon transition-colors"
+        >
           ← Orders
         </Link>
-        <h1 className="text-2xl font-semibold mt-2">New order</h1>
-        <p className="text-mist text-sm mt-1">
-          Balance: {balance === null ? "…" : formatNaira(balance)}
+        <h1 className="text-xl font-semibold tracking-tight text-moon mt-2">
+          New order
+        </h1>
+        <p className="text-mist text-[13px] mt-1 tabular-nums">
+          Balance {balance === null ? "…" : formatNaira(balance)}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-bush border border-bush rounded-2xl p-6 space-y-5">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-surface border border-white/[0.06] rounded-card p-5 sm:p-6 space-y-4"
+      >
         {error && (
-          <div className="p-3 rounded-lg bg-danger/10 border border-danger/30 text-danger text-sm">
+          <div className="px-3.5 py-2.5 rounded-lg bg-danger/10 border border-danger/20 text-danger text-[13px]">
             {error}
           </div>
         )}
 
         <div>
-          <label className="block text-sm text-mist mb-1.5">Platform</label>
+          <label className="block text-[12px] text-mist mb-1.5">Platform</label>
           <select
             value={platform}
             onChange={(e) => {
               setPlatform(e.target.value);
               setOfferId("");
             }}
-            className="w-full bg-night border border-mist/20 rounded-xl px-4 py-3 text-moon focus:outline-none focus:border-gold/60"
+            className={inputClass}
           >
             <option value="">All platforms</option>
             {platforms.map((p) => (
@@ -149,7 +162,7 @@ export default function NewOrderPage() {
         </div>
 
         <div>
-          <label className="block text-sm text-mist mb-1.5">Service</label>
+          <label className="block text-[12px] text-mist mb-1.5">Service</label>
           <select
             value={offerId}
             onChange={(e) => {
@@ -158,7 +171,7 @@ export default function NewOrderPage() {
               if (o) setQuantity(o.min_qty);
             }}
             required
-            className="w-full bg-night border border-mist/20 rounded-xl px-4 py-3 text-moon focus:outline-none focus:border-gold/60"
+            className={inputClass}
           >
             <option value="">Select a service</option>
             {filteredOffers.map((o) => (
@@ -172,8 +185,8 @@ export default function NewOrderPage() {
         {selectedOffer && (
           <>
             <div>
-              <label className="block text-sm text-mist mb-1.5">
-                Quantity ({selectedOffer.min_qty} – {selectedOffer.max_qty})
+              <label className="block text-[12px] text-mist mb-1.5">
+                Quantity ({selectedOffer.min_qty}–{selectedOffer.max_qty})
               </label>
               <input
                 type="number"
@@ -182,26 +195,28 @@ export default function NewOrderPage() {
                 min={selectedOffer.min_qty}
                 max={selectedOffer.max_qty}
                 required
-                className="w-full bg-night border border-mist/20 rounded-xl px-4 py-3 text-moon focus:outline-none focus:border-gold/60"
+                className={inputClass}
               />
             </div>
 
             <div>
-              <label className="block text-sm text-mist mb-1.5">
-                Target link (profile / post / video URL)
+              <label className="block text-[12px] text-mist mb-1.5">
+                Target link
               </label>
               <input
                 type="url"
                 value={targetLink}
                 onChange={(e) => setTargetLink(e.target.value)}
-                placeholder="https://..."
-                className="w-full bg-night border border-mist/20 rounded-xl px-4 py-3 text-moon focus:outline-none focus:border-gold/60"
+                placeholder="https://…"
+                className={inputClass}
               />
             </div>
 
-            <div className="bg-night rounded-xl p-4 flex justify-between items-center">
-              <span className="text-mist text-sm">Total</span>
-              <span className="text-xl font-semibold">{formatNaira(totalKobo)}</span>
+            <div className="bg-night border border-white/[0.06] rounded-lg px-4 py-3 flex justify-between items-center">
+              <span className="text-mist text-[13px]">Total</span>
+              <span className="text-lg font-semibold text-moon tabular-nums">
+                {formatNaira(totalKobo)}
+              </span>
             </div>
           </>
         )}
@@ -209,13 +224,13 @@ export default function NewOrderPage() {
         <button
           type="submit"
           disabled={loading || !offerId}
-          className="w-full bg-gold text-night font-semibold py-3 rounded-xl hover:bg-gold-glow transition disabled:opacity-60"
+          className="w-full bg-gold text-night text-[13px] font-semibold py-2.5 rounded-full hover:brightness-110 transition disabled:opacity-50"
         >
-          {loading ? "Placing order…" : "Place order (hold funds)"}
+          {loading ? "Placing order…" : "Place order · hold funds"}
         </button>
 
-        <p className="text-mist text-xs text-center">
-          Funds are held until the order is delivered. You are only charged for what lands.
+        <p className="text-mist text-[11px] text-center leading-relaxed">
+          Funds are held until delivery. You only pay for what lands.
         </p>
       </form>
     </div>

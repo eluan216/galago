@@ -30,6 +30,11 @@ type CryptoDeposit = {
   created_at: string;
 };
 
+const inputClass =
+  "w-full bg-night border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-[14px] text-moon placeholder:text-mist/50 focus:outline-none focus:border-gold/40 transition";
+const cardClass =
+  "bg-surface border border-white/[0.06] rounded-card p-5 sm:p-6";
+
 function WalletContent() {
   const searchParams = useSearchParams();
   const [balance, setBalance] = useState<number | null>(null);
@@ -44,7 +49,7 @@ function WalletContent() {
 
   useEffect(() => {
     if (searchParams.get("deposit") === "success") {
-      setMessage("Deposit successful! Balance updated.");
+      setMessage("Deposit successful. Balance updated.");
     }
     if (searchParams.get("error")) {
       setError("Payment could not be completed. Try again.");
@@ -162,51 +167,61 @@ function WalletContent() {
     }
   }
 
+  const pending = deposits.filter(
+    (d) => d.status === "pending" || d.status === "confirming"
+  );
+
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold">Wallet</h1>
-        <p className="text-mist text-sm mt-1">Fund with Naira (Paystack) or crypto (USDT)</p>
+        <h1 className="text-xl font-semibold tracking-tight text-moon">Wallet</h1>
+        <p className="text-mist text-[13px] mt-1">
+          Fund with Naira or USDT. One balance for everything.
+        </p>
       </div>
 
-      <div className="bg-bush border border-bush rounded-2xl p-6">
-        <p className="text-mist text-sm">Available balance</p>
-        <p className="text-3xl font-bold mt-1 tracking-tight">
+      {/* Balance — hero number */}
+      <div className={cardClass}>
+        <p className="text-mist text-[12px] tracking-wide">Available balance</p>
+        <p className="text-3xl font-semibold tracking-tight text-moon mt-1 tabular-nums">
           {balance === null ? "…" : formatNaira(balance)}
         </p>
       </div>
 
       {error && (
-        <div className="p-3 rounded-lg bg-danger/10 border border-danger/30 text-danger text-sm">
+        <div className="px-3.5 py-2.5 rounded-lg bg-danger/10 border border-danger/20 text-danger text-[13px]">
           {error}
         </div>
       )}
       {message && (
-        <div className="p-3 rounded-lg bg-success/10 border border-success/30 text-success text-sm">
+        <div className="px-3.5 py-2.5 rounded-lg bg-success/10 border border-success/20 text-success text-[13px]">
           {message}
         </div>
       )}
 
-      <div className="bg-bush border border-bush rounded-2xl p-6">
-        <h2 className="font-medium mb-1">Fund with Naira</h2>
-        <p className="text-mist text-sm mb-4">Card, bank transfer, USSD via Paystack.</p>
+      {/* Fiat */}
+      <div className={cardClass}>
+        <h2 className="text-[15px] font-medium text-moon">Fund with Naira</h2>
+        <p className="text-mist text-[13px] mt-1 mb-4">
+          Card, bank transfer, USSD via Paystack.
+        </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label className="block text-sm text-mist mb-1.5">Amount (NGN)</label>
+            <label className="block text-[12px] text-mist mb-1.5">Amount (NGN)</label>
             <input
               type="number"
               value={fiatAmount}
               onChange={(e) => setFiatAmount(e.target.value)}
               min={100}
               step={100}
-              className="w-full bg-night border border-mist/20 rounded-xl px-4 py-3 text-moon focus:outline-none focus:border-gold/60 transition"
+              className={inputClass}
             />
           </div>
           <div className="flex items-end">
             <button
               onClick={handleFiatFund}
               disabled={fiatLoading}
-              className="w-full sm:w-auto bg-gold text-night font-semibold px-6 py-3 rounded-xl hover:bg-gold-glow transition disabled:opacity-60"
+              className="w-full sm:w-auto bg-gold text-night text-[13px] font-semibold px-5 py-2.5 rounded-full hover:brightness-110 transition disabled:opacity-50"
             >
               {fiatLoading ? "Redirecting…" : "Pay with Paystack"}
             </button>
@@ -214,87 +229,107 @@ function WalletContent() {
         </div>
       </div>
 
-      <div className="bg-bush border border-bush rounded-2xl p-6">
-        <h2 className="font-medium mb-1">Fund with Crypto (USDT)</h2>
-        <p className="text-mist text-sm mb-4">Send USDT on TRC20. We convert and credit your Naira wallet.</p>
+      {/* Crypto */}
+      <div className={cardClass}>
+        <h2 className="text-[15px] font-medium text-moon">Fund with USDT</h2>
+        <p className="text-mist text-[13px] mt-1 mb-4">
+          TRC20 preferred. We convert and credit Naira.
+        </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label className="block text-sm text-mist mb-1.5">Amount (NGN)</label>
+            <label className="block text-[12px] text-mist mb-1.5">Amount (NGN)</label>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               min={1000}
               step={500}
-              className="w-full bg-night border border-mist/20 rounded-xl px-4 py-3 text-moon focus:outline-none focus:border-gold/60 transition"
+              className={inputClass}
             />
           </div>
           <div className="flex items-end">
             <button
               onClick={handleCryptoFund}
               disabled={loading}
-              className="w-full sm:w-auto border border-gold/50 text-gold font-semibold px-6 py-3 rounded-xl hover:bg-gold/10 transition disabled:opacity-60"
+              className="w-full sm:w-auto border border-white/[0.12] text-moon text-[13px] font-medium px-5 py-2.5 rounded-full hover:border-gold/40 hover:text-gold transition disabled:opacity-50"
             >
               {loading ? "Creating invoice…" : "Pay with USDT"}
             </button>
           </div>
         </div>
-        <p className="text-mist text-xs mt-3">Minimum ₦1,000. Network: TRC20.</p>
+        <p className="text-mist text-[11px] mt-3">Minimum ₦1,000 · Network TRC20 only</p>
       </div>
 
-      {deposits.filter((d) => d.status === "pending" || d.status === "confirming").length > 0 && (
+      {pending.length > 0 && (
         <div>
-          <h2 className="font-medium mb-3">Pending crypto deposits</h2>
+          <h2 className="text-[13px] font-medium text-moon mb-3">Pending deposits</h2>
           <div className="space-y-2">
-            {deposits
-              .filter((d) => d.status === "pending" || d.status === "confirming")
-              .map((d) => (
-                <div
-                  key={d.id}
-                  className="bg-bush border border-bush rounded-xl p-4 flex items-center justify-between"
-                >
-                  <div>
-                    <p className="text-sm">
-                      {d.amount_ngn_kobo ? formatNaira(d.amount_ngn_kobo) : "—"} · {d.network}
-                    </p>
-                    <p className="text-mist text-xs capitalize">{d.status}</p>
-                  </div>
-                  {d.pay_url && (
-                    <a href={d.pay_url} target="_blank" rel="noopener noreferrer" className="text-gold text-sm hover:underline">
-                      Open invoice
-                    </a>
-                  )}
+            {pending.map((d) => (
+              <div
+                key={d.id}
+                className="bg-surface border border-white/[0.06] rounded-lg px-4 py-3 flex items-center justify-between"
+              >
+                <div>
+                  <p className="text-[13px] text-moon tabular-nums">
+                    {d.amount_ngn_kobo ? formatNaira(d.amount_ngn_kobo) : "—"}
+                    <span className="text-mist"> · {d.network}</span>
+                  </p>
+                  <p className="text-mist text-[11px] capitalize mt-0.5">{d.status}</p>
                 </div>
-              ))}
+                {d.pay_url && (
+                  <a
+                    href={d.pay_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gold text-[12px] hover:underline"
+                  >
+                    Open invoice
+                  </a>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
 
       <div>
-        <h2 className="font-medium mb-3">Transaction history</h2>
+        <h2 className="text-[13px] font-medium text-moon mb-3">Transaction history</h2>
         {ledger.length === 0 ? (
-          <p className="text-mist text-sm">No transactions yet.</p>
+          <p className="text-mist text-[13px]">No transactions yet.</p>
         ) : (
-          <div className="bg-bush border border-bush rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="bg-surface border border-white/[0.06] rounded-card overflow-hidden">
+            <table className="w-full text-[13px]">
               <thead>
-                <tr className="border-b border-night text-mist text-left">
-                  <th className="px-4 py-3 font-medium">Type</th>
-                  <th className="px-4 py-3 font-medium">Amount</th>
-                  <th className="px-4 py-3 font-medium">Balance</th>
-                  <th className="px-4 py-3 font-medium">Date</th>
+                <tr className="border-b border-white/[0.06] text-mist text-left">
+                  <th className="px-4 py-2.5 font-medium">Type</th>
+                  <th className="px-4 py-2.5 font-medium">Amount</th>
+                  <th className="px-4 py-2.5 font-medium hidden sm:table-cell">Balance</th>
+                  <th className="px-4 py-2.5 font-medium">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {ledger.map((e) => (
-                  <tr key={e.id} className="border-b border-night/50 last:border-0">
-                    <td className="px-4 py-3 capitalize">{e.type.replace(/_/g, " ")}</td>
-                    <td className={`px-4 py-3 font-mono ${e.amount_kobo >= 0 ? "text-success" : "text-danger"}`}>
+                  <tr
+                    key={e.id}
+                    className="border-b border-white/[0.04] last:border-0"
+                  >
+                    <td className="px-4 py-2.5 capitalize text-moon">
+                      {e.type.replace(/_/g, " ")}
+                    </td>
+                    <td
+                      className={`px-4 py-2.5 font-mono tabular-nums ${
+                        e.amount_kobo >= 0 ? "text-success" : "text-danger"
+                      }`}
+                    >
                       {e.amount_kobo >= 0 ? "+" : ""}
                       {formatNaira(e.amount_kobo)}
                     </td>
-                    <td className="px-4 py-3 text-mist">{formatNaira(e.balance_after_kobo)}</td>
-                    <td className="px-4 py-3 text-mist">{new Date(e.created_at).toLocaleString()}</td>
+                    <td className="px-4 py-2.5 text-mist tabular-nums hidden sm:table-cell">
+                      {formatNaira(e.balance_after_kobo)}
+                    </td>
+                    <td className="px-4 py-2.5 text-mist">
+                      {new Date(e.created_at).toLocaleDateString()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -308,7 +343,7 @@ function WalletContent() {
 
 export default function WalletPage() {
   return (
-    <Suspense fallback={<div className="text-mist">Loading wallet…</div>}>
+    <Suspense fallback={<div className="text-mist text-[13px]">Loading wallet…</div>}>
       <WalletContent />
     </Suspense>
   );
