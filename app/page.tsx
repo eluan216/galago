@@ -1,293 +1,342 @@
 import Link from "next/link";
 import { GalagoMark, GalagoWordmark } from "@/components/logo";
+import { HoldDemo } from "@/components/HoldDemo";
 
 /**
- * Galago landing — Afternow craft, Galago product
- * Borrowed: oversized type, airy sections, case-study cards, tag pills, contrast band
- * Kept: nocturnal field, gold accent, hold-until-delivered, wallet product truth
+ * Galago landing v3
+ * Electric blue + lime, bold Outfit, consistent bushbaby mark,
+ * marquee ribbons, interactive hold demo.
  */
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col bg-night-field text-moon">
-      {/* Nav — minimal, sticky, Afternow-clean */}
-      <header className="sticky top-0 z-30 border-b border-white/[0.05] bg-night/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 h-14 flex items-center justify-between">
-          <Link href="/" className="hover:opacity-90 transition-opacity">
-            <GalagoWordmark />
-          </Link>
-          <nav className="flex items-center gap-1 sm:gap-2 text-[13px]">
-            <Link
-              href="#services"
-              className="hidden sm:inline text-mist hover:text-moon px-3 py-1.5 transition-colors"
-            >
-              Services
+    <main className="min-h-screen bg-[var(--bl)] text-white">
+      {/* Nav */}
+      <nav className="sticky top-0 z-20 py-3.5 px-0">
+        <div className="max-w-[1180px] mx-auto px-6">
+          <div className="glass-nav flex items-center gap-5 sm:gap-7 rounded-full py-1.5 pl-2.5 pr-2">
+            <Link href="/" className="shrink-0">
+              <GalagoWordmark />
             </Link>
-            <Link
-              href="#how"
-              className="hidden sm:inline text-mist hover:text-moon px-3 py-1.5 transition-colors"
-            >
-              How it works
-            </Link>
+            <div className="hidden sm:flex gap-6 flex-1 ml-2 text-[12px] font-bold tracking-[0.06em] uppercase">
+              <a href="#services" className="opacity-85 hover:opacity-100 hover:text-[var(--li)]">
+                Services
+              </a>
+              <a href="#how" className="opacity-85 hover:opacity-100 hover:text-[var(--li)]">
+                How it works
+              </a>
+              <a href="#about" className="opacity-85 hover:opacity-100 hover:text-[var(--li)]">
+                About
+              </a>
+            </div>
             <Link
               href="/auth/signin"
-              className="text-mist hover:text-moon px-3 py-1.5 transition-colors"
+              className="hidden sm:inline text-[12px] font-bold tracking-[0.06em] uppercase opacity-90 hover:opacity-100"
             >
               Sign in
             </Link>
-            <Link
-              href="/auth/signup"
-              className="ml-1 bg-moon text-night px-4 py-1.5 rounded-full font-medium hover:bg-white transition-colors"
-            >
+            <Link href="/auth/signup" className="btn-galago btn-galago-sm">
               Open wallet
             </Link>
-          </nav>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <header className="relative pt-8 pb-0 overflow-hidden">
+        <div className="max-w-[1180px] mx-auto px-6 relative">
+          <div className="absolute right-[2%] -top-1 z-[3] bg-[var(--li)] text-[var(--ink)] font-black uppercase leading-none tracking-tight text-[clamp(18px,2.6vw,34px)] px-5 py-4 rounded-[26px] outline outline-2 outline-dashed outline-[var(--ink)] outline-offset-[-8px] rotate-[3deg] text-center pointer-events-none">
+            Naira +
+            <br />
+            USDT
+          </div>
+
+          <div className="absolute right-[4%] top-[4%] w-[min(42vw,380px)] aspect-square z-[2] pointer-events-none animate-bob hidden md:block">
+            <GalagoMark className="w-full h-full" />
+          </div>
+
+          <h1 className="relative z-[1] font-black uppercase tracking-[-0.035em] leading-[0.98] text-[clamp(44px,9vw,120px)] max-w-[14ch] [text-shadow:0_8px_24px_rgba(10,5,90,0.45)]">
+            Partners in the work that runs after dark.
+          </h1>
+
+          <p className="relative z-[3] max-w-[430px] text-[17px] mt-8 mb-6 text-[#e7e5ff]">
+            Galago is the wallet for real engagement, airtime, virtual numbers
+            and cards. We hold your money until delivery lands, then settle.
+          </p>
+
+          <div className="relative z-[3] flex flex-wrap gap-3.5 pb-28">
+            <Link href="/auth/signup" className="btn-galago">
+              Open your wallet
+            </Link>
+            <a href="#services" className="btn-galago btn-galago-outline">
+              Explore services
+            </a>
+          </div>
+        </div>
+
+        {/* Marquee ribbons */}
+        <div className="absolute left-[-4%] right-[-4%] bottom-8 z-[4] pointer-events-none" aria-hidden>
+          <div className="absolute inset-x-0 -bottom-3.5 bg-[var(--li2)] py-3.5 rotate-[1.3deg] -z-10 overflow-hidden">
+            <div className="inline-flex whitespace-nowrap animate-marquee-rev">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <span key={i} className="inline-flex">
+                  {["Hold until delivered", "Kobo precision", "Failures release funds"].map(
+                    (t) => (
+                      <span
+                        key={t + i}
+                        className="font-extrabold text-[clamp(17px,2.2vw,26px)] uppercase tracking-tight px-5 border-r-2 border-[rgba(15,11,59,0.4)] text-[var(--ink)]"
+                      >
+                        {t}
+                      </span>
+                    )
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="bg-[var(--li)] text-[var(--ink)] overflow-hidden whitespace-nowrap py-[18px] -rotate-[2.2deg] shadow-[0_14px_30px_rgba(10,5,90,0.35)]">
+            <div className="inline-flex animate-marquee">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <span key={i} className="inline-flex">
+                  {[
+                    "Social growth",
+                    "Airtime & data",
+                    "Virtual numbers",
+                    "Cards & eSIM",
+                    "Naira + USDT",
+                  ].map((t) => (
+                    <span
+                      key={t + i}
+                      className="font-extrabold text-[clamp(17px,2.2vw,26px)] uppercase tracking-tight px-5 border-r-2 border-[rgba(15,11,59,0.4)]"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* Hero — huge type + floating product object */}
-      <section className="px-5 sm:px-8 pt-16 sm:pt-24 pb-20 sm:pb-28">
-        <div className="max-w-6xl mx-auto">
-          <div className="max-w-3xl">
-            <p className="text-[13px] text-mist mb-6">
-              Nigeria · Night-shift marketplace
-            </p>
-            <h1 className="text-[2.75rem] sm:text-5xl md:text-[3.75rem] font-semibold tracking-[-0.04em] leading-[1.02] text-moon text-balance">
-              Partners in the work that runs after dark.
-            </h1>
-            <p className="mt-6 text-[16px] sm:text-[17px] leading-relaxed text-mist max-w-xl">
-              Galago is the Naira + USDT wallet for real engagement, airtime,
-              virtual numbers, and cards. We hold your money until delivery
-              lands — then settle. Built for resellers who work while others
-              sleep.
-            </p>
-            <div className="mt-10 flex flex-wrap items-center gap-4">
-              <Link
-                href="/auth/signup"
-                className="inline-flex items-center bg-gold text-night text-[14px] font-semibold px-7 py-3 rounded-full hover:brightness-110 transition"
-              >
-                Open your wallet
-              </Link>
-              <Link
-                href="#services"
-                className="text-[14px] text-mist hover:text-moon transition-colors"
-              >
-                Explore services →
-              </Link>
-            </div>
-          </div>
-
-          {/* Floating product panel — like Afternow's hero media object */}
-          <div className="mt-16 sm:mt-20 max-w-2xl">
-            <div className="surface overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06]">
-                <div className="flex items-center gap-2.5">
-                  <GalagoMark className="w-6 h-6" />
-                  <span className="text-[13px] font-medium">Wallet</span>
-                </div>
-                <span className="text-[11px] text-mist tracking-wide">
-                  Live ledger · kobo
-                </span>
-              </div>
-              <div className="px-5 sm:px-6 pt-7 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <div>
-                  <p className="text-[12px] text-mist">Available</p>
-                  <p className="mt-1 text-[2rem] font-semibold tracking-tight tabular-nums">
-                    ₦48,250
-                  </p>
-                  <p className="mt-1 text-[12px] text-mist">
-                    ₦6,400 in active holds
-                  </p>
-                  <div className="mt-5 flex gap-2">
-                    <span className="text-[11px] px-2.5 py-1 rounded-full border border-white/[0.1] text-mist">
-                      Paystack
-                    </span>
-                    <span className="text-[11px] px-2.5 py-1 rounded-full border border-white/[0.1] text-mist">
-                      USDT TRC20
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-3 border-t sm:border-t-0 sm:border-l border-white/[0.06] pt-5 sm:pt-0 sm:pl-8">
-                  {[
-                    ["Hold", "IG · 1k followers", "−₦3,200"],
-                    ["Fund", "Paystack", "+₦20,000"],
-                    ["Settle", "MTN 2GB", "−₦1,150"],
-                  ].map(([t, l, a]) => (
-                    <div
-                      key={l}
-                      className="flex items-center justify-between text-[13px] gap-3"
-                    >
-                      <div className="min-w-0">
-                        <span className="text-mist text-[11px] block">{t}</span>
-                        <span className="text-moon truncate block">{l}</span>
-                      </div>
-                      <span
-                        className={`tabular-nums shrink-0 ${
-                          a.startsWith("+") ? "text-success" : "text-moon"
-                        }`}
-                      >
-                        {a}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* High-contrast band — Afternow chartreuse energy → Galago gold */}
-      <section className="bg-gold text-night">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10 sm:py-12">
-          <p className="text-[1.35rem] sm:text-2xl font-semibold tracking-tight leading-snug max-w-2xl">
-            Hold until delivered. Settle only when it lands. Failures release
-            funds. That is the contract.
-          </p>
-          <p className="mt-3 text-[14px] opacity-80 max-w-lg">
-            One ledger. Kobo precision. Built for Nigerian resellers who cannot
-            afford fuzzy balances.
-          </p>
-        </div>
-      </section>
-
-      {/* Services as case-study cards */}
-      <section id="services" className="px-5 sm:px-8 py-20 sm:py-28">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-12 sm:mb-16 max-w-2xl">
-            <p className="text-[13px] text-mist mb-3">What runs on Galago</p>
-            <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] leading-tight text-moon">
-              Services that keep moving after midnight.
+      {/* Services */}
+      <section id="services" className="bg-[var(--of)] text-[var(--ink)] py-[110px] relative z-[1]">
+        <div className="max-w-[1180px] mx-auto px-6">
+          <div className="flex flex-wrap justify-between gap-8 items-end mb-12">
+            <h2 className="font-black uppercase tracking-tight text-[clamp(34px,5.4vw,68px)] max-w-[900px] leading-[0.98]">
+              Services that keep{" "}
+              <span className="inline-block bg-[var(--bl)] text-white rounded-full px-[0.32em] py-[0.02em] outline outline-2 outline-dashed outline-[var(--li)] outline-offset-[-5px]">
+                moving
+              </span>{" "}
+              after midnight.
             </h2>
+            <p className="text-[var(--mu)] max-w-[430px] m-0">
+              Every service draws from the same ledger and follows the same hold
+              logic.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               {
-                tags: ["Social", "Delivery"],
-                title: "Real engagement",
-                body: "Followers, likes, views — tiered quality. Funds held until delivery confirms.",
-                outcome: "Hold-until-delivered · Reseller rates",
+                lime: true,
+                title: (
+                  <>
+                    Real
+                    <br />
+                    engagement
+                  </>
+                ),
+                body: "Followers, likes and views in tiered quality, at reseller rates.",
+                panel: (
+                  <>
+                    <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
+                      <span>IG · 1k followers</span>
+                      <span>₦3,200</span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-white/22 overflow-hidden">
+                      <i className="block h-full w-[70%] bg-[var(--li)] rounded-full" />
+                    </div>
+                    <b className="text-[11px] tracking-[0.08em] uppercase text-center mt-auto opacity-90">
+                      Held until delivery confirms
+                    </b>
+                  </>
+                ),
               },
               {
-                tags: ["VTU", "Nigeria"],
-                title: "Airtime & data",
-                body: "Top-up major Nigerian networks from the same wallet you use for social.",
-                outcome: "Instant · Network-native",
+                lime: false,
+                title: (
+                  <>
+                    Airtime
+                    <br />
+                    &amp; data
+                  </>
+                ),
+                body: "Top up the major Nigerian networks from the same wallet.",
+                panel: (
+                  <>
+                    <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
+                      <span>2GB data</span>
+                      <span>₦1,150</span>
+                    </div>
+                    <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
+                      <span>Airtime</span>
+                      <span>₦1,000</span>
+                    </div>
+                    <b className="text-[11px] tracking-[0.08em] uppercase text-center mt-auto opacity-90">
+                      Instant, network-native
+                    </b>
+                  </>
+                ),
               },
               {
-                tags: ["Numbers", "SMS"],
-                title: "Virtual numbers",
-                body: "Rent numbers for verification flows. Same hold logic, same ledger.",
-                outcome: "Verification-ready",
+                lime: false,
+                title: (
+                  <>
+                    Virtual
+                    <br />
+                    numbers
+                  </>
+                ),
+                body: "Rent numbers for verification flows.",
+                panel: (
+                  <>
+                    <div className="font-extrabold text-[26px] tracking-[0.2em] text-center text-[var(--li)]">
+                      4 8 2 9 1 7
+                    </div>
+                    <b className="text-[11px] tracking-[0.08em] uppercase text-center mt-auto opacity-90">
+                      Same hold logic, same ledger
+                    </b>
+                  </>
+                ),
               },
               {
-                tags: ["Cards", "eSIM"],
-                title: "Cards & connectivity",
-                body: "Digital cards and travel eSIMs without leaving the Galago balance.",
-                outcome: "One wallet · Global reach",
+                lime: false,
+                title: (
+                  <>
+                    Cards
+                    <br />
+                    &amp; eSIM
+                  </>
+                ),
+                body: "Digital cards and travel eSIMs, no leaving the balance.",
+                panel: (
+                  <>
+                    <div className="bg-gradient-to-br from-white to-[#cfd0ff] rounded-[10px] p-2.5 text-[var(--ink)] font-extrabold h-[62px] flex flex-col justify-between">
+                      <span>Galago card</span>
+                      <span>•••• 0000</span>
+                    </div>
+                    <b className="text-[11px] tracking-[0.08em] uppercase text-center mt-auto opacity-90">
+                      One wallet, global reach
+                    </b>
+                  </>
+                ),
               },
-            ].map((item) => (
-              <article key={item.title} className="case-card p-6 sm:p-8 flex flex-col">
-                <div className="flex flex-wrap gap-2 mb-5">
-                  {item.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-[11px] px-2.5 py-1 rounded-full border border-white/[0.1] text-mist"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <h3 className="text-xl font-semibold tracking-tight text-moon">
-                  {item.title}
+            ].map((c, i) => (
+              <article
+                key={i}
+                className={`rounded-[22px] px-[22px] pt-[26px] pb-[22px] flex flex-col items-center text-center gap-2 shadow-[0_10px_30px_rgba(42,27,247,0.08)] transition-transform hover:-translate-y-1.5 ${
+                  c.lime ? "bg-[var(--li)]" : "bg-white"
+                }`}
+              >
+                <h3 className="text-2xl font-black uppercase leading-none">
+                  {c.title}
                 </h3>
-                <p className="mt-3 text-[14px] leading-relaxed text-mist flex-1">
-                  {item.body}
+                <p
+                  className={`m-0 text-sm min-h-[44px] ${
+                    c.lime ? "text-[#2b3300]" : "text-[var(--mu)]"
+                  }`}
+                >
+                  {c.body}
                 </p>
-                <p className="mt-6 text-[12px] text-gold">{item.outcome}</p>
+                <div className="mt-3 w-full bg-[var(--bl)] rounded-2xl p-3.5 text-white shadow-[0_8px_0_var(--bl2)] text-left text-[13px] min-h-[130px] flex flex-col gap-2">
+                  {c.panel}
+                </div>
               </article>
             ))}
           </div>
+
+          <div className="pt-[70px] pb-8 text-center font-bold tracking-[0.06em] uppercase text-[13px]">
+            Fund your wallet with
+            <div className="flex gap-11 justify-center flex-wrap mt-4 text-[22px] tracking-tight normal-case font-extrabold">
+              <span>Paystack</span>
+              <span>USDT TRC20</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* How it works — editorial, not numbered chrome */}
-      <section id="how" className="border-t border-white/[0.06] px-5 sm:px-8 py-20 sm:py-28">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-          <div className="lg:col-span-5">
-            <p className="text-[13px] text-mist mb-3">How money moves</p>
-            <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] leading-tight text-moon">
-              Fund. Order. Settle.
+      {/* How */}
+      <section id="how" className="py-[110px] bg-[var(--bl)] text-white">
+        <div className="max-w-[1180px] mx-auto px-6">
+          <p className="font-black uppercase tracking-tight leading-[1.02] text-[clamp(28px,4.6vw,58px)] max-w-[1000px]">
+            We hold your money until delivery lands{" "}
+            <span className="inline-grid place-items-center w-[0.9em] h-[0.9em] rounded-full bg-[var(--li)] text-[var(--ink)] align-[-0.1em] text-[0.8em] mx-[0.1em]">
+              ✱
+            </span>{" "}
+            then settle. If it fails, funds release.
+          </p>
+          <HoldDemo />
+        </div>
+      </section>
+
+      {/* About */}
+      <section id="about" className="bg-[var(--of)] text-[var(--ink)] py-[110px]">
+        <div className="max-w-[1180px] mx-auto px-6 grid grid-cols-1 md:grid-cols-[0.75fr_1.25fr] gap-10 items-center">
+          <div className="mx-auto w-full max-w-[320px]">
+            <GalagoMark className="w-full h-auto" />
+          </div>
+          <div>
+            <h2 className="font-black uppercase tracking-tight text-[clamp(34px,5vw,56px)] leading-[0.98]">
+              Small. Sharp. Awake at night.
             </h2>
-            <p className="mt-5 text-[15px] leading-relaxed text-mist max-w-sm">
-              Three steps. No mystery fees. The ledger is the source of truth —
-              every kobo accounted for.
+            <p className="text-[var(--mu)] text-[19px] max-w-[520px] mt-4 mb-7">
+              Galago is the bushbaby, Africa&apos;s nocturnal climber with
+              enormous eyes. Not an owl. The wallet that works while you rest.
             </p>
             <Link
               href="/auth/signup"
-              className="inline-flex mt-8 bg-gold text-night text-[13px] font-semibold px-6 py-2.5 rounded-full hover:brightness-110 transition"
+              className="btn-galago"
+              style={{
+                background: "var(--bl)",
+                color: "#fff",
+                borderColor: "var(--ink)",
+              }}
             >
-              Start free
+              Open your wallet
             </Link>
-          </div>
-          <div className="lg:col-span-7 space-y-0">
-            {[
-              {
-                title: "Fund",
-                body: "Paystack for Naira or USDT on TRC20. Credit hits your ledger immediately.",
-              },
-              {
-                title: "Order",
-                body: "Pick a service and quantity. We reserve the exact amount — a hold, not a charge.",
-              },
-              {
-                title: "Settle",
-                body: "When delivery confirms, the hold becomes a charge. If it fails, funds release.",
-              },
-            ].map((step, i) => (
-              <div
-                key={step.title}
-                className={`py-7 ${
-                  i < 2 ? "border-b border-white/[0.06]" : ""
-                }`}
-              >
-                <h3 className="text-[17px] font-medium text-moon">{step.title}</h3>
-                <p className="mt-2 text-[14px] leading-relaxed text-mist max-w-md">
-                  {step.body}
-                </p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
 
-      {/* Closing — spacious, confident */}
-      <section className="border-t border-white/[0.06] px-5 sm:px-8 py-20 sm:py-28">
-        <div className="max-w-6xl mx-auto">
-          <GalagoMark className="w-12 h-12 mb-8" />
-          <h2 className="text-3xl sm:text-5xl font-semibold tracking-[-0.035em] leading-[1.05] text-moon max-w-2xl text-balance">
-            Small. Sharp. Awake at night.
+      {/* Final CTA */}
+      <section className="bg-[var(--li)] text-[var(--ink)] py-[100px] text-center">
+        <div className="max-w-[1180px] mx-auto px-6">
+          <h2 className="font-black uppercase tracking-tight text-[clamp(34px,5vw,56px)] leading-[0.98] mx-auto mb-4">
+            One ledger. Kobo precision.
           </h2>
-          <p className="mt-5 text-[15px] text-mist max-w-lg leading-relaxed">
-            Galago is the bushbaby — Africa&apos;s nocturnal climber with
-            enormous eyes. Not an owl. The wallet that works while you rest.
+          <p className="max-w-[520px] mx-auto mb-8 font-medium text-[19px]">
+            Settle only when it lands. Failures release funds. That is the
+            contract.
           </p>
           <Link
             href="/auth/signup"
-            className="inline-flex mt-10 bg-gold text-night text-[14px] font-semibold px-7 py-3 rounded-full hover:brightness-110 transition"
+            className="btn-galago"
+            style={{
+              background: "var(--ink)",
+              color: "var(--li)",
+              boxShadow: "0 5px 0 #000",
+              borderColor: "#000",
+            }}
           >
-            Open your wallet
+            Start free
           </Link>
         </div>
       </section>
 
-      <footer className="border-t border-white/[0.06] px-5 sm:px-8 py-8">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[12px] text-mist">
-          <div className="flex items-center gap-2">
-            <GalagoMark className="w-5 h-5" />
-            <span>© {new Date().getFullYear()} Galago</span>
-          </div>
-          <span>galago.ng · Port Harcourt roots</span>
+      <footer className="bg-[var(--ink)] text-[#bfbbe8] py-8 text-sm">
+        <div className="max-w-[1180px] mx-auto px-6 flex flex-wrap justify-between gap-3">
+          <span>© {new Date().getFullYear()} Galago</span>
+          <span>galago.ng, Port Harcourt roots</span>
         </div>
       </footer>
     </main>
