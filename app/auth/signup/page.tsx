@@ -6,6 +6,17 @@ import { createClient } from "@/lib/supabase/client";
 import { GalagoWordmark, GalagoMark } from "@/components/logo";
 import { GoogleButton } from "@/components/GoogleButton";
 
+/** Prefer production URL so confirm links never point at localhost */
+function appOrigin() {
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
+    return window.location.origin;
+  }
+  return (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    "https://galago-eluanatein-ogumas-projects.vercel.app"
+  );
+}
+
 export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,13 +30,14 @@ export default function SignUpPage() {
     setLoading(true);
     setError(null);
 
+    const origin = appOrigin();
     const supabase = createClient();
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: fullName },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${origin}/auth/callback`,
       },
     });
 
@@ -40,11 +52,12 @@ export default function SignUpPage() {
   }
 
   async function handleGoogle() {
+    const origin = appOrigin();
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${origin}/auth/callback`,
         queryParams: {
           access_type: "offline",
           prompt: "consent",
@@ -66,6 +79,9 @@ export default function SignUpPage() {
               We sent a confirmation link to{" "}
               <strong className="text-white">{email}</strong>. Click it to
               activate your Galago wallet.
+            </p>
+            <p className="text-white/50 text-xs mt-3">
+              Check spam / promotions. Link opens Galago (not localhost).
             </p>
             <Link
               href="/auth/signin"
