@@ -5,16 +5,20 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { GalagoWordmark } from "@/components/logo";
+import { GoogleButton } from "@/components/GoogleButton";
 
 function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/dashboard";
+  const authError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    authError ? "Sign-in failed. Try again or use Google." : null
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,6 +47,10 @@ function SignInForm() {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
   }
@@ -54,6 +62,14 @@ function SignInForm() {
           {error}
         </div>
       )}
+
+      <GoogleButton onClick={handleGoogle} label="Sign in with Google" />
+
+      <div className="my-6 flex items-center gap-3">
+        <div className="flex-1 h-px bg-white/20" />
+        <span className="text-white/50 text-xs uppercase tracking-wide">or email</span>
+        <div className="flex-1 h-px bg-white/20" />
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -89,23 +105,12 @@ function SignInForm() {
         </button>
       </form>
 
-      <div className="my-6 flex items-center gap-3">
-        <div className="flex-1 h-px bg-white/20" />
-        <span className="text-white/50 text-xs uppercase tracking-wide">or</span>
-        <div className="flex-1 h-px bg-white/20" />
-      </div>
-
-      <button
-        onClick={handleGoogle}
-        type="button"
-        className="w-full border-2 border-white/40 text-white py-3 rounded-full font-bold text-[13px] uppercase tracking-wide hover:bg-white hover:text-[var(--bl)] transition"
-      >
-        Continue with Google
-      </button>
-
       <p className="mt-6 text-center text-sm text-white/70">
         Don&apos;t have an account?{" "}
-        <Link href="/auth/signup" className="text-[var(--li)] font-semibold hover:underline">
+        <Link
+          href="/auth/signup"
+          className="text-[var(--li)] font-semibold hover:underline"
+        >
           Sign up
         </Link>
       </p>

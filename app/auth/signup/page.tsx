@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { GalagoWordmark, GalagoMark } from "@/components/logo";
+import { GoogleButton } from "@/components/GoogleButton";
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState("");
@@ -44,6 +45,10 @@ export default function SignUpPage() {
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
       },
     });
   }
@@ -90,6 +95,16 @@ export default function SignUpPage() {
               {error}
             </div>
           )}
+
+          <GoogleButton onClick={handleGoogle} label="Sign up with Google" />
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="flex-1 h-px bg-white/20" />
+            <span className="text-white/50 text-xs uppercase tracking-wide">
+              or email
+            </span>
+            <div className="flex-1 h-px bg-white/20" />
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -140,23 +155,12 @@ export default function SignUpPage() {
             </button>
           </form>
 
-          <div className="my-6 flex items-center gap-3">
-            <div className="flex-1 h-px bg-white/20" />
-            <span className="text-white/50 text-xs uppercase tracking-wide">or</span>
-            <div className="flex-1 h-px bg-white/20" />
-          </div>
-
-          <button
-            onClick={handleGoogle}
-            type="button"
-            className="w-full border-2 border-white/40 text-white py-3 rounded-full font-bold text-[13px] uppercase tracking-wide hover:bg-white hover:text-[var(--bl)] transition"
-          >
-            Continue with Google
-          </button>
-
           <p className="mt-6 text-center text-sm text-white/70">
             Already have an account?{" "}
-            <Link href="/auth/signin" className="text-[var(--li)] font-semibold hover:underline">
+            <Link
+              href="/auth/signin"
+              className="text-[var(--li)] font-semibold hover:underline"
+            >
               Sign in
             </Link>
           </p>
