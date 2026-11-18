@@ -2,62 +2,129 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Galago Design Map — nocturnal product + Afternow-scale craft */
+/* Galago v3 — electric blue + lime product system */
 :root {
-  --night: #06080b;
-  --night-elevated: #0b0e13;
-  --surface: #10141b;
-  --surface-2: #161b24;
-  --border: rgba(255, 255, 255, 0.07);
-  --moon: #f4f2ec;
-  --mist: #8b93a7;
-  --gold: #e8b923;
-  --gold-bright: #f0c93a;
-  --gold-soft: rgba(232, 185, 35, 0.14);
-  --success: #2dd4a8;
-  --danger: #f87171;
+  --bl: #2a1bf7;
+  --bl2: #1f12c9;
+  --li: #c8f51b;
+  --li2: #a9d400;
+  --ink: #0f0b3b;
+  --of: #f3f5fc;
+  --mu: #4a4670;
+  --hold: #ffd84d;
+  --rel: #ff8a7a;
+  --white: #ffffff;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
 }
 
 body {
-  background: var(--night);
-  color: var(--moon);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  margin: 0;
+  background: var(--bl);
+  color: #fff;
+  font-family: Outfit, system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  overflow-x: hidden;
 }
 
-/*
- * Night field — open space like Afternow white, but nocturnal.
- * Soft ambient only; type and cards do the work.
- */
-.bg-night-field {
-  background-color: var(--night);
-  background-image:
-    radial-gradient(ellipse 100% 70% at 70% 0%, rgba(232, 185, 35, 0.07), transparent 50%),
-    radial-gradient(ellipse 60% 50% at 0% 100%, rgba(139, 147, 167, 0.05), transparent 45%);
+/* Chunk button — lime, hard ink shadow */
+.btn-galago {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: Outfit, sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 14px 26px;
+  border-radius: 999px;
+  background: var(--li);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: 0 5px 0 var(--ink);
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.btn-galago:hover {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--ink);
+}
+.btn-galago:active {
+  transform: translateY(5px);
+  box-shadow: 0 0 0 var(--ink);
+}
+.btn-galago:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.btn-galago-outline {
+  background: transparent;
+  color: #fff;
+  border-color: #fff;
+  box-shadow: none;
+}
+.btn-galago-outline:hover {
+  background: #fff;
+  color: var(--bl);
+  box-shadow: none;
+  transform: none;
+}
+.btn-galago-sm {
+  padding: 10px 20px;
 }
 
-.surface {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+.glass-nav {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 30px 60px rgba(10, 5, 90, 0.45);
 }
 
-.surface-2 {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+.glass-panel {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 30px 60px rgba(10, 5, 90, 0.45);
+  border-radius: 28px;
 }
 
-/* Case-study style service card */
-.case-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  transition: border-color 160ms ease, background 160ms ease;
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
 }
-.case-card:hover {
-  border-color: rgba(232, 185, 35, 0.35);
-  background: var(--surface-2);
+.animate-marquee {
+  animation: marquee 26s linear infinite;
+}
+.animate-marquee-rev {
+  animation: marquee 34s linear infinite reverse;
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-12px);
+  }
+}
+.animate-bob {
+  animation: bob 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-rev,
+  .animate-bob {
+    animation: none !important;
+  }
 }
 
 @layer utilities {

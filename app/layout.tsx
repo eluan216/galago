@@ -1,22 +1,30 @@
 import type { Metadata, Viewport } from "next";
+import { Outfit } from "next/font/google";
 import "./globals.css";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  display: "swap",
+  variable: "--font-outfit",
+});
 
 export const metadata: Metadata = {
   title: "Galago — Grow while you sleep",
   description:
-    "Nigerian digital marketplace. Unified wallet for social growth, VTU, virtual numbers, cards, eSIM — fund with Naira or crypto.",
+    "Naira + USDT wallet for real engagement, airtime, virtual numbers and cards. Hold until delivered.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0C10",
+  themeColor: "#2a1bf7",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-night text-moon antialiased">
+    <html lang="en" className={outfit.variable}>
+      <body className="min-h-screen antialiased font-[family-name:var(--font-outfit)]">
         {children}
       </body>
     </html>
