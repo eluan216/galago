@@ -26,7 +26,7 @@ function formatNaira(kobo: number) {
 }
 
 const inputClass =
-  "w-full bg-night border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-[14px] text-moon focus:outline-none focus:border-gold/40 transition";
+  "w-full bg-[var(--of)] border-2 border-[var(--ink)]/15 rounded-xl px-3.5 py-2.5 text-[14px] text-[var(--ink)] focus:outline-none focus:border-[var(--bl)] transition";
 
 export default function NewOrderPage() {
   const router = useRouter();
@@ -120,30 +120,32 @@ export default function NewOrderPage() {
       <div>
         <Link
           href="/dashboard/orders"
-          className="text-mist text-[12px] hover:text-moon transition-colors"
+          className="text-white/60 text-[12px] font-semibold hover:text-[var(--li)] transition-colors"
         >
           ← Orders
         </Link>
-        <h1 className="text-xl font-semibold tracking-tight text-moon mt-2">
+        <h1 className="text-2xl font-black uppercase tracking-tight text-white mt-2">
           New order
         </h1>
-        <p className="text-mist text-[13px] mt-1 tabular-nums">
+        <p className="text-white/65 text-[13px] mt-1 tabular-nums">
           Balance {balance === null ? "…" : formatNaira(balance)}
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-surface border border-white/[0.06] rounded-card p-5 sm:p-6 space-y-4"
+        className="bg-white text-[var(--ink)] rounded-[22px] p-5 sm:p-6 space-y-4 shadow-[0_10px_30px_rgba(10,5,90,0.15)]"
       >
         {error && (
-          <div className="px-3.5 py-2.5 rounded-lg bg-danger/10 border border-danger/20 text-danger text-[13px]">
+          <div className="px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-[13px]">
             {error}
           </div>
         )}
 
         <div>
-          <label className="block text-[12px] text-mist mb-1.5">Platform</label>
+          <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
+            Platform
+          </label>
           <select
             value={platform}
             onChange={(e) => {
@@ -162,7 +164,9 @@ export default function NewOrderPage() {
         </div>
 
         <div>
-          <label className="block text-[12px] text-mist mb-1.5">Service</label>
+          <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
+            Service
+          </label>
           <select
             value={offerId}
             onChange={(e) => {
@@ -185,7 +189,7 @@ export default function NewOrderPage() {
         {selectedOffer && (
           <>
             <div>
-              <label className="block text-[12px] text-mist mb-1.5">
+              <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
                 Quantity ({selectedOffer.min_qty}–{selectedOffer.max_qty})
               </label>
               <input
@@ -200,7 +204,7 @@ export default function NewOrderPage() {
             </div>
 
             <div>
-              <label className="block text-[12px] text-mist mb-1.5">
+              <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
                 Target link
               </label>
               <input
@@ -212,9 +216,11 @@ export default function NewOrderPage() {
               />
             </div>
 
-            <div className="bg-night border border-white/[0.06] rounded-lg px-4 py-3 flex justify-between items-center">
-              <span className="text-mist text-[13px]">Total</span>
-              <span className="text-lg font-semibold text-moon tabular-nums">
+            <div className="bg-[var(--of)] border-2 border-[var(--ink)]/10 rounded-xl px-4 py-3 flex justify-between items-center">
+              <span className="text-[var(--mu)] text-[13px] font-semibold">
+                Total (held)
+              </span>
+              <span className="text-lg font-black tabular-nums">
                 {formatNaira(totalKobo)}
               </span>
             </div>
@@ -224,12 +230,12 @@ export default function NewOrderPage() {
         <button
           type="submit"
           disabled={loading || !offerId}
-          className="w-full bg-gold text-night text-[13px] font-semibold py-2.5 rounded-full hover:brightness-110 transition disabled:opacity-50"
+          className="btn-galago w-full"
         >
           {loading ? "Placing order…" : "Place order · hold funds"}
         </button>
 
-        <p className="text-mist text-[11px] text-center leading-relaxed">
+        <p className="text-[var(--mu)] text-[11px] text-center leading-relaxed">
           Funds are held until delivery. You only pay for what lands.
         </p>
       </form>

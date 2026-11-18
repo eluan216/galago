@@ -31,9 +31,10 @@ type CryptoDeposit = {
 };
 
 const inputClass =
-  "w-full bg-night border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-[14px] text-moon placeholder:text-mist/50 focus:outline-none focus:border-gold/40 transition";
+  "w-full bg-[var(--of)] border-2 border-[var(--ink)]/15 rounded-xl px-3.5 py-2.5 text-[14px] text-[var(--ink)] placeholder:text-[var(--mu)] focus:outline-none focus:border-[var(--bl)] transition";
+
 const cardClass =
-  "bg-surface border border-white/[0.06] rounded-card p-5 sm:p-6";
+  "bg-white text-[var(--ink)] rounded-[22px] p-5 sm:p-6 shadow-[0_10px_30px_rgba(10,5,90,0.15)]";
 
 function WalletContent() {
   const searchParams = useSearchParams();
@@ -172,42 +173,48 @@ function WalletContent() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-moon">Wallet</h1>
-        <p className="text-mist text-[13px] mt-1">
+        <h1 className="text-2xl font-black uppercase tracking-tight text-white">
+          Wallet
+        </h1>
+        <p className="text-white/65 text-[13px] mt-1">
           Fund with Naira or USDT. One balance for everything.
         </p>
       </div>
 
-      {/* Balance — hero number */}
       <div className={cardClass}>
-        <p className="text-mist text-[12px] tracking-wide">Available balance</p>
-        <p className="text-3xl font-semibold tracking-tight text-moon mt-1 tabular-nums">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--mu)]">
+          Available balance
+        </p>
+        <p className="text-3xl font-black tracking-tight mt-1 tabular-nums">
           {balance === null ? "…" : formatNaira(balance)}
         </p>
       </div>
 
       {error && (
-        <div className="px-3.5 py-2.5 rounded-lg bg-danger/10 border border-danger/20 text-danger text-[13px]">
+        <div className="px-3.5 py-2.5 rounded-xl bg-[var(--rel)]/20 border border-[var(--rel)]/40 text-[var(--rel)] text-[13px] font-medium">
           {error}
         </div>
       )}
       {message && (
-        <div className="px-3.5 py-2.5 rounded-lg bg-success/10 border border-success/20 text-success text-[13px]">
+        <div className="px-3.5 py-2.5 rounded-xl bg-[var(--li)]/25 border border-[var(--li)]/50 text-[var(--li)] text-[13px] font-medium">
           {message}
         </div>
       )}
 
-      {/* Fiat */}
       <div className={cardClass}>
-        <h2 className="text-[15px] font-medium text-moon">Fund with Naira</h2>
-        <p className="text-mist text-[13px] mt-1 mb-4">
+        <h2 className="text-[15px] font-black uppercase tracking-tight">
+          Fund with Naira
+        </h2>
+        <p className="text-[var(--mu)] text-[13px] mt-1 mb-4">
           Card, bank transfer, USSD via Paystack.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label className="block text-[12px] text-mist mb-1.5">Amount (NGN)</label>
+            <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
+              Amount (NGN)
+            </label>
             <input
               type="number"
               value={fiatAmount}
@@ -221,7 +228,7 @@ function WalletContent() {
             <button
               onClick={handleFiatFund}
               disabled={fiatLoading}
-              className="w-full sm:w-auto bg-gold text-night text-[13px] font-semibold px-5 py-2.5 rounded-full hover:brightness-110 transition disabled:opacity-50"
+              className="btn-galago btn-galago-sm w-full sm:w-auto"
             >
               {fiatLoading ? "Redirecting…" : "Pay with Paystack"}
             </button>
@@ -229,15 +236,18 @@ function WalletContent() {
         </div>
       </div>
 
-      {/* Crypto */}
       <div className={cardClass}>
-        <h2 className="text-[15px] font-medium text-moon">Fund with USDT</h2>
-        <p className="text-mist text-[13px] mt-1 mb-4">
+        <h2 className="text-[15px] font-black uppercase tracking-tight">
+          Fund with USDT
+        </h2>
+        <p className="text-[var(--mu)] text-[13px] mt-1 mb-4">
           TRC20 preferred. We convert and credit Naira.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label className="block text-[12px] text-mist mb-1.5">Amount (NGN)</label>
+            <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
+              Amount (NGN)
+            </label>
             <input
               type="number"
               value={amount}
@@ -251,37 +261,43 @@ function WalletContent() {
             <button
               onClick={handleCryptoFund}
               disabled={loading}
-              className="w-full sm:w-auto border border-white/[0.12] text-moon text-[13px] font-medium px-5 py-2.5 rounded-full hover:border-gold/40 hover:text-gold transition disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex items-center justify-center text-[12px] font-extrabold uppercase tracking-wide px-5 py-2.5 rounded-full border-2 border-[var(--ink)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white transition disabled:opacity-50"
             >
               {loading ? "Creating invoice…" : "Pay with USDT"}
             </button>
           </div>
         </div>
-        <p className="text-mist text-[11px] mt-3">Minimum ₦1,000 · Network TRC20 only</p>
+        <p className="text-[var(--mu)] text-[11px] mt-3">
+          Minimum ₦1,000 · Network TRC20 only
+        </p>
       </div>
 
       {pending.length > 0 && (
         <div>
-          <h2 className="text-[13px] font-medium text-moon mb-3">Pending deposits</h2>
+          <h2 className="text-[13px] font-bold uppercase tracking-wide text-white mb-3">
+            Pending deposits
+          </h2>
           <div className="space-y-2">
             {pending.map((d) => (
               <div
                 key={d.id}
-                className="bg-surface border border-white/[0.06] rounded-lg px-4 py-3 flex items-center justify-between"
+                className="bg-white/10 border border-white/15 rounded-xl px-4 py-3 flex items-center justify-between text-white"
               >
                 <div>
-                  <p className="text-[13px] text-moon tabular-nums">
+                  <p className="text-[13px] tabular-nums">
                     {d.amount_ngn_kobo ? formatNaira(d.amount_ngn_kobo) : "—"}
-                    <span className="text-mist"> · {d.network}</span>
+                    <span className="text-white/60"> · {d.network}</span>
                   </p>
-                  <p className="text-mist text-[11px] capitalize mt-0.5">{d.status}</p>
+                  <p className="text-white/55 text-[11px] capitalize mt-0.5">
+                    {d.status}
+                  </p>
                 </div>
                 {d.pay_url && (
                   <a
                     href={d.pay_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-gold text-[12px] hover:underline"
+                    className="text-[var(--li)] text-[12px] font-semibold hover:underline"
                   >
                     Open invoice
                   </a>
@@ -293,41 +309,47 @@ function WalletContent() {
       )}
 
       <div>
-        <h2 className="text-[13px] font-medium text-moon mb-3">Transaction history</h2>
+        <h2 className="text-[13px] font-bold uppercase tracking-wide text-white mb-3">
+          Transaction history
+        </h2>
         {ledger.length === 0 ? (
-          <p className="text-mist text-[13px]">No transactions yet.</p>
+          <p className="text-white/60 text-[13px]">No transactions yet.</p>
         ) : (
-          <div className="bg-surface border border-white/[0.06] rounded-card overflow-hidden">
+          <div className="bg-white text-[var(--ink)] rounded-[18px] overflow-hidden shadow-[0_8px_20px_rgba(10,5,90,0.12)]">
             <table className="w-full text-[13px]">
               <thead>
-                <tr className="border-b border-white/[0.06] text-mist text-left">
-                  <th className="px-4 py-2.5 font-medium">Type</th>
-                  <th className="px-4 py-2.5 font-medium">Amount</th>
-                  <th className="px-4 py-2.5 font-medium hidden sm:table-cell">Balance</th>
-                  <th className="px-4 py-2.5 font-medium">Date</th>
+                <tr className="border-b border-[var(--ink)]/10 text-[var(--mu)] text-left">
+                  <th className="px-4 py-2.5 font-semibold">Type</th>
+                  <th className="px-4 py-2.5 font-semibold">Amount</th>
+                  <th className="px-4 py-2.5 font-semibold hidden sm:table-cell">
+                    Balance
+                  </th>
+                  <th className="px-4 py-2.5 font-semibold">Date</th>
                 </tr>
               </thead>
               <tbody>
                 {ledger.map((e) => (
                   <tr
                     key={e.id}
-                    className="border-b border-white/[0.04] last:border-0"
+                    className="border-b border-[var(--ink)]/6 last:border-0"
                   >
-                    <td className="px-4 py-2.5 capitalize text-moon">
+                    <td className="px-4 py-2.5 capitalize">
                       {e.type.replace(/_/g, " ")}
                     </td>
                     <td
-                      className={`px-4 py-2.5 font-mono tabular-nums ${
-                        e.amount_kobo >= 0 ? "text-success" : "text-danger"
+                      className={`px-4 py-2.5 font-mono tabular-nums font-medium ${
+                        e.amount_kobo >= 0
+                          ? "text-emerald-600"
+                          : "text-rose-600"
                       }`}
                     >
                       {e.amount_kobo >= 0 ? "+" : ""}
                       {formatNaira(e.amount_kobo)}
                     </td>
-                    <td className="px-4 py-2.5 text-mist tabular-nums hidden sm:table-cell">
+                    <td className="px-4 py-2.5 text-[var(--mu)] tabular-nums hidden sm:table-cell">
                       {formatNaira(e.balance_after_kobo)}
                     </td>
-                    <td className="px-4 py-2.5 text-mist">
+                    <td className="px-4 py-2.5 text-[var(--mu)]">
                       {new Date(e.created_at).toLocaleDateString()}
                     </td>
                   </tr>
@@ -343,7 +365,11 @@ function WalletContent() {
 
 export default function WalletPage() {
   return (
-    <Suspense fallback={<div className="text-mist text-[13px]">Loading wallet…</div>}>
+    <Suspense
+      fallback={
+        <div className="text-white/60 text-[13px]">Loading wallet…</div>
+      }
+    >
       <WalletContent />
     </Suspense>
   );
