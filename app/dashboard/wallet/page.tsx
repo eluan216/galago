@@ -25,6 +25,7 @@ type CryptoDeposit = {
   id: string;
   network: string;
   amount_ngn_kobo: number | null;
+  amount_crypto?: number | null;
   status: string;
   pay_url: string | null;
   created_at: string;
@@ -41,7 +42,7 @@ function WalletContent() {
   const [balance, setBalance] = useState<number | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [deposits, setDeposits] = useState<CryptoDeposit[]>([]);
-  const [amount, setAmount] = useState("5000");
+  const [usdtAmount, setUsdtAmount] = useState("10");
   const [fiatAmount, setFiatAmount] = useState("2000");
   const [loading, setLoading] = useState(false);
   const [fiatLoading, setFiatLoading] = useState(false);
@@ -50,7 +51,10 @@ function WalletContent() {
 
   useEffect(() => {
     if (searchParams.get("deposit") === "success") {
-      setMessage("Deposit successful. Balance updated.");
+      setMessage("Deposit successful. Balance updates after network confirms.");
+    }
+    if (searchParams.get("deposit") === "cancelled") {
+      setError("Deposit cancelled.");
     }
     if (searchParams.get("error")) {
       setError("Payment could not be completed. Try again.");
@@ -84,7 +88,9 @@ function WalletContent() {
 
     const { data: crypto } = await supabase
       .from("crypto_deposits")
-      .select("id, network, amount_ngn_kobo, status, pay_url, created_at")
+      .select(
+        "id, network, amount_ngn_kobo, amount_crypto, status, pay_url, created_at"
+      )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(10);
@@ -97,9 +103,9 @@ function WalletContent() {
     setError(null);
     setMessage(null);
 
-    const ngn = Number(amount);
-    if (!ngn || ngn < 1000) {
-      setError("Minimum is ₦1,000");
+    const usdt = Number(usdtAmount);
+    if (!usdt || usdt < 10) {
+      setError("Minimum is 10 USDT");
       setLoading(false);
       return;
     }
@@ -108,13 +114,14 @@ function WalletContent() {
       const res = await fetch("/api/crypto/create-invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount_ngn: ngn, network: "TRC20" }),
+        body: JSON.stringify({ amount_usdt: usdt, network: "TRC20" }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Failed to create invoice");
+        const detail = data.detail ? ` — ${data.detail}` : "";
+        setError((data.error || "Failed to create invoice") + detail);
         setLoading(false);
         return;
       }
@@ -124,10 +131,10 @@ function WalletContent() {
       } else {
         setMessage("Invoice created. Refresh to see status.");
         loadData();
+        setLoading(false);
       }
     } catch {
       setError("Network error. Try again.");
-    } finally {
       setLoading(false);
     }
   }
@@ -193,12 +200,12 @@ function WalletContent() {
       </div>
 
       {error && (
-        <div className="px-3.5 py-2.5 rounded-xl bg-[var(--rel)]/20 border border-[var(--rel)]/40 text-[var(--rel)] text-[13px] font-medium">
+        <div className="px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-[13px] font-medium break-words">
           {error}
         </div>
       )}
       {message && (
-        <div className="px-3.5 py-2.5 rounded-xl bg-[var(--li)]/25 border border-[var(--li)]/50 text-[var(--li)] text-[13px] font-medium">
+        <div className="px-3.5 py-2.5 rounded-xl bg-[var(--li)]/25 border border-[var(--li)]/50 text-[var(--ink)] text-[13px] font-medium">
           {message}
         </div>
       )}
@@ -241,20 +248,22 @@ function WalletContent() {
           Fund with USDT
         </h2>
         <p className="text-[var(--mu)] text-[13px] mt-1 mb-4">
-          TRC20 preferred. We convert and credit Naira.
+          Amount in <strong>USDT</strong> (USD). TRC20. Credited to your Naira
+          wallet after confirmation.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
-              Amount (NGN)
+              Amount (USDT)
             </label>
             <input
               type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              min={1000}
-              step={500}
+              value={usdtAmount}
+              onChange={(e) => setUsdtAmount(e.target.value)}
+              min={10}
+              step={1}
               className={inputClass}
+              placeholder="10"
             />
           </div>
           <div className="flex items-end">
@@ -268,7 +277,7 @@ function WalletContent() {
           </div>
         </div>
         <p className="text-[var(--mu)] text-[11px] mt-3">
-          Minimum ₦1,000 · Network TRC20 only
+          Minimum <strong>10 USDT</strong> · Network TRC20 only
         </p>
       </div>
 
@@ -285,7 +294,11 @@ function WalletContent() {
               >
                 <div>
                   <p className="text-[13px] tabular-nums">
-                    {d.amount_ngn_kobo ? formatNaira(d.amount_ngn_kobo) : "—"}
+                    {d.amount_crypto != null
+                      ? `${d.amount_crypto} USDT`
+                      : d.amount_ngn_kobo
+                        ? formatNaira(d.amount_ngn_kobo)
+                        : "—"}
                     <span className="text-white/60"> · {d.network}</span>
                   </p>
                   <p className="text-white/55 text-[11px] capitalize mt-0.5">
