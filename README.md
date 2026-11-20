@@ -72,9 +72,37 @@ never commit `.env.local`, provider credentials, or service-role keys.
 | `VTPASS_ENVIRONMENT` | `sandbox` or `live`; production purchases require `live` |
 | `ESIM_ACCESS_CODE` | eSIM Access code; keep server-side |
 | `ESIM_ACCESS_PURCHASES_ENABLED` | Must be `true` to enable eSIM purchases; defaults to `false` |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token from BotFather; server-side only |
+| `TELEGRAM_WEBHOOK_SECRET` | Random webhook secret configured with Telegram's `setWebhook` |
+| `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` | Optional bot username without `@`, for dashboard links |
 
 Set production secrets in your hosting provider's environment-variable
 settings, not in source files or `NEXT_PUBLIC_*` variables.
+
+### Telegram bot
+
+Create the bot with Telegram's `@BotFather`, then configure `TELEGRAM_BOT_TOKEN`,
+`TELEGRAM_WEBHOOK_SECRET`, and `NEXT_PUBLIC_APP_URL` in the deployment
+environment. Apply `supabase/migrations/20261120140000_telegram_bot.sql` through
+the established database migration workflow. After deploying, register the
+webhook at `https://<your-domain>/api/telegram/webhook` using Telegram's
+`setWebhook` method and the same webhook secret. Keep the bot token and webhook
+secret private.
+
+For example, with those environment variables available in your shell:
+
+```bash
+curl --fail-with-body -X POST \
+  "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook" \
+  -d "url=${NEXT_PUBLIC_APP_URL}/api/telegram/webhook" \
+  -d "secret_token=${TELEGRAM_WEBHOOK_SECRET}"
+```
+
+Users connect their Telegram identity from **Dashboard → Telegram** with an
+expiring, one-use code. The bot supports account balance, recent marketplace
+orders, placing marketplace orders, and product information. Purchases for
+airtime, bills, and eSIM plans continue through their existing dashboard
+purchase flows.
 
 ## Provider setup
 
@@ -162,8 +190,9 @@ npm run build
 | `/dashboard/bills` | VTpass catalogue, verification, purchases, and status |
 | `/dashboard/esim` | eSIM destinations, packages, orders, and profiles |
 
-The `/api/fiat`, `/api/crypto`, `/api/orders`, `/api/vtpass`, `/api/esim`, and
-`/api/currency` route handlers implement the related server-side operations.
+The `/api/fiat`, `/api/crypto`, `/api/orders`, `/api/vtpass`, `/api/esim`,
+`/api/telegram`, and `/api/currency` route handlers implement the related
+server-side operations.
 
 ## Legal and operational notes
 

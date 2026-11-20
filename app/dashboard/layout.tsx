@@ -65,6 +65,7 @@ export default async function DashboardLayout({
                 ["/dashboard/bills", "Bills"],
                 ["/dashboard/esim", "eSIM"],
                 ["/dashboard/orders", "Orders"],
+                ["/dashboard/telegram", "Telegram"],
               ].map(([href, label]) => (
                 <Link
                   key={href}
