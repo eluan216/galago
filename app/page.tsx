@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { GalagoMark, GalagoWordmark } from "@/components/logo";
 import { HoldDemo } from "@/components/HoldDemo";
+import { GalagoChat } from "@/components/GalagoChat";
 
 /**
  * Galago landing v3
@@ -453,6 +454,7 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      <GalagoChat />
     </main>
   );
 }
