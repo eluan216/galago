@@ -46,6 +46,7 @@ function WalletContent() {
   const [fiatAmount, setFiatAmount] = useState("2000");
   const [loading, setLoading] = useState(false);
   const [fiatLoading, setFiatLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -96,6 +97,26 @@ function WalletContent() {
       .limit(10);
 
     setDeposits(crypto || []);
+  }
+
+  async function handleDemoCredit() {
+    setDemoLoading(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/wallet/demo-credit", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Demo credit failed");
+      } else {
+        setMessage(`Demo +${formatNaira(data.credited_kobo)} added`);
+        await loadData();
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setDemoLoading(false);
+    }
   }
 
   async function handleCryptoFund() {
@@ -197,6 +218,14 @@ function WalletContent() {
         <p className="text-3xl font-black tracking-tight mt-1 tabular-nums">
           {balance === null ? "…" : formatNaira(balance)}
         </p>
+        <button
+          type="button"
+          onClick={handleDemoCredit}
+          disabled={demoLoading}
+          className="mt-4 text-[11px] font-bold uppercase tracking-wide text-[var(--bl)] hover:underline disabled:opacity-50"
+        >
+          {demoLoading ? "Crediting…" : "Add demo ₦5,000 (test loop)"}
+        </button>
       </div>
 
       {error && (
@@ -248,8 +277,8 @@ function WalletContent() {
           Fund with USDT
         </h2>
         <p className="text-[var(--mu)] text-[13px] mt-1 mb-4">
-          Amount in <strong>USDT</strong> (USD). TRC20. Credited to your Naira
-          wallet after confirmation.
+          Amount in <strong>USDT</strong>. TRC20. Credited to Naira after
+          confirmation.
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">

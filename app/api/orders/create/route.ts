@@ -1,21 +1,12 @@
 /**
  * POST /api/orders/create
- * ----------------------
- * Places a new order and HOLDS funds from the user's Naira wallet.
- *
- * Flow:
- *  1. Validate offer + quantity
- *  2. Check wallet balance
- *  3. Deduct (hold) the amount with an optimistic lock
- *  4. Create the order with status "held"
- *  5. Write a ledger entry of type "hold"
- *  6. Write an order event
- *
- * Funds stay held until the order is completed, partially settled, or released.
+ * Hold funds → create order status "held" → ledger "hold".
+ * Uses service role for writes (RLS is select-only on wallets/orders/ledger).
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
@@ -39,8 +30,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Load the offer (must be active)
-    const { data: offer, error: offerErr } = await supabase
+    const admin = createAdminClient();
+
+    const { data: offer, error: offerErr } = await admin
       .from("offers")
       .select("*, services(name, platform_id)")
       .eq("id", offer_id)
@@ -63,19 +55,20 @@ export async function POST(req: NextRequest) {
     const amountKobo = offer.rate_kobo * quantity;
     const key = idempotency_key || randomUUID();
 
-    // Idempotency: if this key was already used, return the existing order
-    const { data: existing } = await supabase
+    const { data: existing } = await admin
       .from("orders")
       .select("id, status")
       .eq("idempotency_key", key)
       .maybeSingle();
 
     if (existing) {
-      return NextResponse.json({ order_id: existing.id, status: existing.status });
+      return NextResponse.json({
+        order_id: existing.id,
+        status: existing.status,
+      });
     }
 
-    // Load wallet
-    const { data: wallet } = await supabase
+    const { data: wallet } = await admin
       .from("wallets")
       .select("*")
       .eq("user_id", user.id)
@@ -83,29 +76,36 @@ export async function POST(req: NextRequest) {
 
     if (!wallet || wallet.balance_kobo < amountKobo) {
       return NextResponse.json(
-        { error: "Insufficient balance. Please fund your wallet." },
+        {
+          error: "Insufficient balance. Fund your wallet first.",
+          need_kobo: amountKobo,
+          balance_kobo: wallet?.balance_kobo ?? 0,
+        },
         { status: 402 }
       );
     }
 
-    // Hold funds (optimistic lock on current balance to avoid double-spend races)
     const newBalance = wallet.balance_kobo - amountKobo;
 
-    const { error: walletErr } = await supabase
+    const { data: updatedWallet, error: walletErr } = await admin
       .from("wallets")
-      .update({ balance_kobo: newBalance, updated_at: new Date().toISOString() })
+      .update({
+        balance_kobo: newBalance,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", wallet.id)
-      .eq("balance_kobo", wallet.balance_kobo); // only succeed if balance hasn't changed
+      .eq("balance_kobo", wallet.balance_kobo)
+      .select("id")
+      .maybeSingle();
 
-    if (walletErr) {
+    if (walletErr || !updatedWallet) {
       return NextResponse.json(
         { error: "Could not hold funds. Try again." },
         { status: 409 }
       );
     }
 
-    // Create the order in "held" status
-    const { data: order, error: orderErr } = await supabase
+    const { data: order, error: orderErr } = await admin
       .from("orders")
       .insert({
         user_id: user.id,
@@ -117,8 +117,7 @@ export async function POST(req: NextRequest) {
         held_amount_kobo: amountKobo,
         idempotency_key: key,
         metadata: {
-          service_name: (offer as any).services?.name,
-          platform: (offer as any).services?.platform_id,
+          service_name: (offer as { services?: { name?: string } }).services?.name,
           rate_kobo: offer.rate_kobo,
         },
       })
@@ -126,21 +125,22 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (orderErr || !order) {
-      // Rollback the hold if order creation fails
-      await supabase
+      await admin
         .from("wallets")
         .update({ balance_kobo: wallet.balance_kobo })
         .eq("id", wallet.id);
 
       console.error(orderErr);
       return NextResponse.json(
-        { error: "Failed to create order" },
+        {
+          error: "Failed to create order",
+          detail: orderErr?.message,
+        },
         { status: 500 }
       );
     }
 
-    // Immutable ledger entry for the hold
-    await supabase.from("ledger_entries").insert({
+    await admin.from("ledger_entries").insert({
       wallet_id: wallet.id,
       user_id: user.id,
       type: "hold",
@@ -151,24 +151,25 @@ export async function POST(req: NextRequest) {
       description: `Hold for order ${order.id.slice(0, 8)}`,
     });
 
-    // Audit trail
-    await supabase.from("order_events").insert({
+    await admin.from("order_events").insert({
       order_id: order.id,
       status: "held",
-      note: "Funds held. Awaiting provider dispatch.",
+      note: "Funds held. Awaiting delivery / mark complete.",
     });
-
-    // TODO: dispatch to real SMM / VTU provider adapter here
 
     return NextResponse.json({
       order_id: order.id,
       status: order.status,
       amount_kobo: amountKobo,
+      balance_after_kobo: newBalance,
     });
   } catch (err) {
     console.error(err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: "Internal server error",
+        detail: err instanceof Error ? err.message : String(err),
+      },
       { status: 500 }
     );
   }

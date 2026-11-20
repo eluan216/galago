@@ -1,13 +1,14 @@
+/**
+ * POST /api/orders/[id]/complete
+ * held | processing → completed (settle). Funds already deducted on hold.
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
-/**
- * Simple complete endpoint (admin / system use).
- * Moves order from held/processing → completed and converts the hold into a settle.
- * In production this is called by provider webhooks.
- */
 export async function POST(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -21,8 +22,9 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // For now allow the order owner (later restrict to admin/service role)
-    const { data: order } = await supabase
+    const admin = createAdminClient();
+
+    const { data: order } = await admin
       .from("orders")
       .select("*")
       .eq("id", id)
@@ -40,8 +42,7 @@ export async function POST(
       );
     }
 
-    // Mark completed (funds already deducted as hold → now it is settled)
-    await supabase
+    await admin
       .from("orders")
       .update({
         status: "completed",
@@ -50,35 +51,40 @@ export async function POST(
       })
       .eq("id", id);
 
-    // Ledger settle note (optional informational entry)
-    const { data: wallet } = await supabase
+    const { data: wallet } = await admin
       .from("wallets")
       .select("id, balance_kobo")
       .eq("user_id", user.id)
       .single();
 
     if (wallet) {
-      await supabase.from("ledger_entries").insert({
+      await admin.from("ledger_entries").insert({
         wallet_id: wallet.id,
         user_id: user.id,
         type: "settle",
-        amount_kobo: 0, // already deducted
+        amount_kobo: 0,
         balance_after_kobo: wallet.balance_kobo,
         reference_type: "order",
         reference_id: id,
-        description: `Settled order ${id.slice(0, 8)}`,
+        description: `Settled order ${id.slice(0, 8)} — delivery confirmed`,
       });
     }
 
-    await supabase.from("order_events").insert({
+    await admin.from("order_events").insert({
       order_id: id,
       status: "completed",
-      note: "Order marked completed",
+      note: "Order marked completed (settle)",
     });
 
     return NextResponse.json({ ok: true, status: "completed" });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Failed" }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "Failed to complete",
+        detail: err instanceof Error ? err.message : String(err),
+      },
+      { status: 500 }
+    );
   }
 }
