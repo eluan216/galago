@@ -45,52 +45,34 @@ export async function GET(req: NextRequest) {
         new URL("/dashboard/wallet?error=invalid_meta", req.url)
       );
     }
-
-    const supabase = getServiceClient();
-
-    // Idempotency: skip if we already credited this reference
-    const { data: existing } = await supabase
-      .from("ledger_entries")
-      .select("id")
-      .eq("reference_type", "fiat_deposit")
-      .eq("description", `Paystack ${reference}`)
-      .maybeSingle();
-
-    if (existing) {
+    if (!Number.isInteger(amountKobo) || amountKobo <= 0 || tx.amount !== amountKobo) {
       return NextResponse.redirect(
-        new URL("/dashboard/wallet?deposit=success", req.url)
+        new URL("/dashboard/wallet?error=amount_mismatch", req.url)
       );
     }
 
-    const { data: wallet } = await supabase
-      .from("wallets")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+    const supabase = getServiceClient();
 
-    if (!wallet) {
+    const { data: result, error } = await supabase.rpc("credit_wallet", {
+      p_user_id: userId,
+      p_amount_kobo: amountKobo,
+      p_type: "fund_fiat",
+      p_reference_type: "fiat_deposit",
+      p_reference_id: null,
+      p_description: `Paystack ${reference}`,
+      p_metadata: { provider: "paystack", reference, paid_at: tx.paid_at },
+    });
+    if (error) {
+      console.error("Fiat credit RPC:", error);
+      return NextResponse.redirect(
+        new URL("/dashboard/wallet?error=credit_failed", req.url)
+      );
+    }
+    if (!(result as Record<string, unknown>).ok) {
       return NextResponse.redirect(
         new URL("/dashboard/wallet?error=no_wallet", req.url)
       );
     }
-
-    const newBalance = wallet.balance_kobo + amountKobo;
-
-    await supabase
-      .from("wallets")
-      .update({ balance_kobo: newBalance, updated_at: new Date().toISOString() })
-      .eq("id", wallet.id);
-
-    await supabase.from("ledger_entries").insert({
-      wallet_id: wallet.id,
-      user_id: userId,
-      type: "fund_fiat",
-      amount_kobo: amountKobo,
-      balance_after_kobo: newBalance,
-      reference_type: "fiat_deposit",
-      description: `Paystack ${reference}`,
-      metadata: { provider: "paystack", reference, paid_at: tx.paid_at },
-    });
 
     return NextResponse.redirect(
       new URL("/dashboard/wallet?deposit=success", req.url)

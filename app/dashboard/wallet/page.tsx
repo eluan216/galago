@@ -3,6 +3,12 @@
 import { Suspense, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
+import {
+  convertNgnKoboToCurrency,
+  currencyFlag,
+} from "@/lib/currency-format";
+import { useDashboardLanguage } from "@/components/DashboardLanguageProvider";
+import { translate } from "@/lib/dashboard-language";
 
 function formatNaira(kobo: number) {
   return new Intl.NumberFormat("en-NG", {
@@ -31,6 +37,23 @@ type CryptoDeposit = {
   created_at: string;
 };
 
+type CurrencyOption = {
+  code: string;
+  name: string;
+  symbol: string;
+  decimal_digits: number;
+  countries: string[];
+};
+
+function formatCurrencyAmount(amount: number, currency: string, digits: number) {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: digits,
+  }).format(amount);
+}
+
 const inputClass =
   "w-full bg-[var(--of)] border-2 border-[var(--ink)]/15 rounded-xl px-3.5 py-2.5 text-[14px] text-[var(--ink)] placeholder:text-[var(--mu)] focus:outline-none focus:border-[var(--bl)] transition";
 
@@ -38,8 +61,15 @@ const cardClass =
   "bg-white text-[var(--ink)] rounded-[22px] p-5 sm:p-6 shadow-[0_10px_30px_rgba(10,5,90,0.15)]";
 
 function WalletContent() {
+  const locale = useDashboardLanguage();
+  const t = (source: string) => translate(locale, source);
   const searchParams = useSearchParams();
   const [balance, setBalance] = useState<number | null>(null);
+  const [currencies, setCurrencies] = useState<CurrencyOption[]>([]);
+  const [rates, setRates] = useState<Record<string, number>>({});
+  const [displayCurrency, setDisplayCurrency] = useState("NGN");
+  const [ratesUpdatedAt, setRatesUpdatedAt] = useState<string | null>(null);
+  const [ratesError, setRatesError] = useState<string | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [deposits, setDeposits] = useState<CryptoDeposit[]>([]);
   const [usdtAmount, setUsdtAmount] = useState("10");
@@ -61,7 +91,28 @@ function WalletContent() {
       setError("Payment could not be completed. Try again.");
     }
     loadData();
+    loadCurrencyRates();
   }, [searchParams]);
+
+  async function loadCurrencyRates() {
+    try {
+      const response = await fetch("/api/currency/rates");
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Could not load exchange rates");
+      }
+      setCurrencies(data.currencies || []);
+      setRates(data.rates || {});
+      setRatesUpdatedAt(data.updated_at || null);
+      setRatesError(null);
+    } catch (rateError) {
+      setRatesError(
+        rateError instanceof Error
+          ? rateError.message
+          : "Could not load exchange rates"
+      );
+    }
+  }
 
   async function loadData() {
     const supabase = createClient();
@@ -199,32 +250,76 @@ function WalletContent() {
   const pending = deposits.filter(
     (d) => d.status === "pending" || d.status === "confirming"
   );
+  const selectedCurrencyInfo = currencies.find(
+    (currency) => currency.code === displayCurrency
+  );
+  const convertedBalance =
+    balance === null
+      ? null
+      : convertNgnKoboToCurrency(balance, displayCurrency, rates);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-          Wallet
+          {t("Wallet")}
         </h1>
         <p className="text-white/65 text-[13px] mt-1">
-          Fund with Naira or USDT. One balance for everything.
+          {t("Fund with Naira or USDT. One balance for everything.")}
         </p>
       </div>
 
       <div className={cardClass}>
         <p className="text-[12px] font-semibold uppercase tracking-wide text-[var(--mu)]">
-          Available balance
+          {t("Available balance")}
         </p>
         <p className="text-3xl font-black tracking-tight mt-1 tabular-nums">
-          {balance === null ? "…" : formatNaira(balance)}
+          {balance === null
+            ? "…"
+            : convertedBalance === null || displayCurrency === "NGN"
+              ? formatNaira(balance)
+              : formatCurrencyAmount(
+                  convertedBalance,
+                  displayCurrency,
+                  selectedCurrencyInfo?.decimal_digits ?? 2
+                )}
         </p>
+        <label className="block text-[12px] font-semibold text-[var(--mu)] mt-4 mb-1.5">
+          {t("Display balance in")}
+        </label>
+        <select
+          value={displayCurrency}
+          onChange={(event) => setDisplayCurrency(event.target.value)}
+          className={inputClass}
+          disabled={currencies.length === 0}
+        >
+          <option value="NGN">🇳🇬 NGN — Nigerian Naira</option>
+          {currencies
+            .filter((currency) => currency.code !== "NGN")
+            .map((currency) => (
+              <option key={currency.code} value={currency.code}>
+                {currencyFlag(currency.countries)} {currency.code} — {currency.name}
+              </option>
+            ))}
+        </select>
+        <p className="text-[11px] text-[var(--mu)] mt-2">
+          {t("Display conversion only; your spendable balance and all charges remain in NGN.")}
+          {ratesUpdatedAt
+            ? ` Rates updated ${new Date(ratesUpdatedAt).toLocaleString()}.`
+            : ""}
+        </p>
+        {ratesError && (
+          <p role="alert" className="text-[11px] text-rose-700 mt-2">
+            Currency conversion unavailable: {ratesError}
+          </p>
+        )}
         <button
           type="button"
           onClick={handleDemoCredit}
           disabled={demoLoading}
           className="mt-4 text-[11px] font-bold uppercase tracking-wide text-[var(--bl)] hover:underline disabled:opacity-50"
         >
-          {demoLoading ? "Crediting…" : "Add demo ₦5,000 (test loop)"}
+          {demoLoading ? t("Crediting…") : t("Add demo ₦5,000 (test loop)")}
         </button>
       </div>
 
@@ -241,15 +336,15 @@ function WalletContent() {
 
       <div className={cardClass}>
         <h2 className="text-[15px] font-black uppercase tracking-tight">
-          Fund with Naira
+          {t("Fund with Naira")}
         </h2>
         <p className="text-[var(--mu)] text-[13px] mt-1 mb-4">
-          Card, bank transfer, USSD via Paystack.
+          {t("Card, bank transfer, USSD via Paystack.")}
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
-              Amount (NGN)
+              {t("Amount (NGN)")}
             </label>
             <input
               type="number"
@@ -266,7 +361,7 @@ function WalletContent() {
               disabled={fiatLoading}
               className="btn-galago btn-galago-sm w-full sm:w-auto"
             >
-              {fiatLoading ? "Redirecting…" : "Pay with Paystack"}
+              {fiatLoading ? t("Redirecting…") : t("Pay with Paystack")}
             </button>
           </div>
         </div>
@@ -274,16 +369,15 @@ function WalletContent() {
 
       <div className={cardClass}>
         <h2 className="text-[15px] font-black uppercase tracking-tight">
-          Fund with USDT
+          {t("Fund with USDT")}
         </h2>
         <p className="text-[var(--mu)] text-[13px] mt-1 mb-4">
-          Amount in <strong>USDT</strong>. TRC20. Credited to Naira after
-          confirmation.
+          {t("Amount in USDT. TRC20. Credited to Naira after confirmation.")}
         </p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
-              Amount (USDT)
+              {t("Amount (USDT)")}
             </label>
             <input
               type="number"
@@ -301,19 +395,19 @@ function WalletContent() {
               disabled={loading}
               className="w-full sm:w-auto inline-flex items-center justify-center text-[12px] font-extrabold uppercase tracking-wide px-5 py-2.5 rounded-full border-2 border-[var(--ink)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white transition disabled:opacity-50"
             >
-              {loading ? "Creating invoice…" : "Pay with USDT"}
+              {loading ? t("Creating invoice…") : t("Pay with USDT")}
             </button>
           </div>
         </div>
         <p className="text-[var(--mu)] text-[11px] mt-3">
-          Minimum <strong>10 USDT</strong> · Network TRC20 only
+          {t("Minimum 10 USDT · Network TRC20 only")}
         </p>
       </div>
 
       {pending.length > 0 && (
         <div>
           <h2 className="text-[13px] font-bold uppercase tracking-wide text-white mb-3">
-            Pending deposits
+            {t("Pending deposits")}
           </h2>
           <div className="space-y-2">
             {pending.map((d) => (
@@ -341,7 +435,7 @@ function WalletContent() {
                     rel="noopener noreferrer"
                     className="text-[var(--li)] text-[12px] font-semibold hover:underline"
                   >
-                    Open invoice
+                    {t("Open invoice")}
                   </a>
                 )}
               </div>
@@ -352,21 +446,21 @@ function WalletContent() {
 
       <div>
         <h2 className="text-[13px] font-bold uppercase tracking-wide text-white mb-3">
-          Transaction history
+          {t("Transaction history")}
         </h2>
         {ledger.length === 0 ? (
-          <p className="text-white/60 text-[13px]">No transactions yet.</p>
+          <p className="text-white/60 text-[13px]">{t("No transactions yet.")}</p>
         ) : (
           <div className="bg-white text-[var(--ink)] rounded-[18px] overflow-hidden shadow-[0_8px_20px_rgba(10,5,90,0.12)]">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-[var(--ink)]/10 text-[var(--mu)] text-left">
-                  <th className="px-4 py-2.5 font-semibold">Type</th>
-                  <th className="px-4 py-2.5 font-semibold">Amount</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("Type")}</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("Amount")}</th>
                   <th className="px-4 py-2.5 font-semibold hidden sm:table-cell">
-                    Balance
+                    {t("Balance")}
                   </th>
-                  <th className="px-4 py-2.5 font-semibold">Date</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("Date")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -406,10 +500,13 @@ function WalletContent() {
 }
 
 export default function WalletPage() {
+  const locale = useDashboardLanguage();
   return (
     <Suspense
       fallback={
-        <div className="text-white/60 text-[13px]">Loading wallet…</div>
+        <div className="text-white/60 text-[13px]">
+          {translate(locale, "Loading wallet…")}
+        </div>
       }
     >
       <WalletContent />

@@ -24,78 +24,19 @@ export async function POST(
 
     const admin = createAdminClient();
 
-    const { data: order } = await admin
-      .from("orders")
-      .select("*")
-      .eq("id", id)
-      .eq("user_id", user.id)
-      .single();
-
-    if (!order) {
+    const { data: result, error } = await admin.rpc("release_order", {
+      p_user_id: user.id,
+      p_order_id: id,
+    });
+    if (error) {
+      console.error("release_order RPC:", error);
+      return NextResponse.json({ error: "Failed to release" }, { status: 500 });
+    }
+    const value = result as Record<string, unknown>;
+    if (!value.ok) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
-
-    if (!["held", "processing", "partial"].includes(order.status)) {
-      return NextResponse.json(
-        { error: `Cannot release order in status ${order.status}` },
-        { status: 400 }
-      );
-    }
-
-    const releaseKobo = order.held_amount_kobo ?? order.amount_kobo ?? 0;
-
-    const { data: wallet } = await admin
-      .from("wallets")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!wallet) {
-      return NextResponse.json({ error: "Wallet not found" }, { status: 500 });
-    }
-
-    const newBalance = wallet.balance_kobo + releaseKobo;
-
-    await admin
-      .from("wallets")
-      .update({
-        balance_kobo: newBalance,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", wallet.id);
-
-    await admin
-      .from("orders")
-      .update({
-        status: "failed",
-        held_amount_kobo: 0,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id);
-
-    await admin.from("ledger_entries").insert({
-      wallet_id: wallet.id,
-      user_id: user.id,
-      type: "release",
-      amount_kobo: releaseKobo,
-      balance_after_kobo: newBalance,
-      reference_type: "order",
-      reference_id: id,
-      description: `Released hold for order ${id.slice(0, 8)}`,
-    });
-
-    await admin.from("order_events").insert({
-      order_id: id,
-      status: "failed",
-      note: "Hold released — funds returned to wallet",
-    });
-
-    return NextResponse.json({
-      ok: true,
-      status: "failed",
-      released_kobo: releaseKobo,
-      balance_after_kobo: newBalance,
-    });
+    return NextResponse.json(value);
   } catch (err) {
     console.error(err);
     return NextResponse.json(

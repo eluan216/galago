@@ -25,11 +25,15 @@ function SignInForm() {
     setLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    let supabase;
+    try {
+      supabase = createClient();
+    } catch {
+      setError("Platform setup is incomplete. Contact the administrator.");
+      setLoading(false);
+      return;
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError(error.message);
@@ -42,17 +46,18 @@ function SignInForm() {
   }
 
   async function handleGoogle() {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
+    try {
+      const supabase = createClient();
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+          queryParams: { access_type: "offline", prompt: "consent" },
         },
-      },
-    });
+      });
+    } catch {
+      setError("Platform setup is incomplete. Contact the administrator.");
+    }
   }
 
   return (

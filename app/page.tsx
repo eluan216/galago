@@ -27,10 +27,13 @@ export default function HomePage() {
               <a href="#about" className="opacity-85 hover:opacity-100 hover:text-[var(--li)]">
                 About
               </a>
+              <a href="#faq" className="opacity-85 hover:opacity-100 hover:text-[var(--li)]">
+                FAQ
+              </a>
             </div>
             <Link
               href="/auth/signin"
-              className="hidden sm:inline text-[12px] font-bold tracking-[0.06em] uppercase opacity-90 hover:opacity-100"
+              className="text-[12px] font-bold tracking-[0.06em] uppercase opacity-90 hover:opacity-100"
             >
               Sign in
             </Link>
@@ -44,7 +47,7 @@ export default function HomePage() {
       {/* Hero */}
       <header className="relative pt-8 pb-0 overflow-hidden">
         <div className="max-w-[1180px] mx-auto px-6 relative">
-          <div className="absolute right-[2%] -top-1 z-[3] bg-[var(--li)] text-[var(--ink)] font-black uppercase leading-none tracking-tight text-[clamp(18px,2.6vw,34px)] px-5 py-4 rounded-[26px] outline outline-2 outline-dashed outline-[var(--ink)] outline-offset-[-8px] rotate-[3deg] text-center pointer-events-none">
+          <div className="hidden sm:block absolute right-[2%] -top-1 z-[3] bg-[var(--li)] text-[var(--ink)] font-black uppercase leading-none tracking-tight text-[clamp(18px,2.6vw,34px)] px-5 py-4 rounded-[26px] outline outline-2 outline-dashed outline-[var(--ink)] outline-offset-[-8px] rotate-[3deg] text-center pointer-events-none">
             Naira +
             <br />
             USDT
@@ -55,17 +58,18 @@ export default function HomePage() {
           </div>
 
           <h1 className="relative z-[1] font-black uppercase tracking-[-0.035em] leading-[0.98] text-[clamp(44px,9vw,120px)] max-w-[14ch] [text-shadow:0_8px_24px_rgba(10,5,90,0.45)]">
-            Partners in the work that runs after dark.
+            Your digital services. One wallet.
           </h1>
 
           <p className="relative z-[3] max-w-[430px] text-[17px] mt-8 mb-6 text-[#e7e5ff]">
-            Galago is the wallet for real engagement, airtime, virtual numbers
-            and cards. We hold your money until delivery lands, then settle.
+            Explore supported digital services, Nigerian bill payments and
+            eSIM plans in one account. Fund your wallet when you&apos;re ready,
+            place an order, and track its status from your dashboard.
           </p>
 
           <div className="relative z-[3] flex flex-wrap gap-3.5 pb-28">
             <Link href="/auth/signup" className="btn-galago">
-              Open your wallet
+              Get started
             </Link>
             <a href="#services" className="btn-galago btn-galago-outline">
               Explore services
@@ -79,7 +83,7 @@ export default function HomePage() {
             <div className="inline-flex whitespace-nowrap animate-marquee-rev">
               {Array.from({ length: 2 }).map((_, i) => (
                 <span key={i} className="inline-flex">
-                  {["Hold until delivered", "Kobo precision", "Failures release funds"].map(
+                  {["Wallet control", "Order tracking", "Provider-aware status"].map(
                     (t) => (
                       <span
                         key={t + i}
@@ -98,11 +102,11 @@ export default function HomePage() {
               {Array.from({ length: 2 }).map((_, i) => (
                 <span key={i} className="inline-flex">
                   {[
-                    "Social growth",
+                    "Bill payments",
                     "Airtime & data",
-                    "Virtual numbers",
-                    "Cards & eSIM",
-                    "Naira + USDT",
+                    "eSIM plans",
+                    "Order tracking",
+                    "Paystack + USDT where available",
                   ].map((t) => (
                     <span
                       key={t + i}
@@ -118,20 +122,48 @@ export default function HomePage() {
         </div>
       </header>
 
+      {/* Trust */}
+      <section className="bg-white text-[var(--ink)] py-8 relative z-[1]" aria-label="What to expect from Galago">
+        <div className="max-w-[1180px] mx-auto px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            {
+              title: "Wallet control",
+              body: "Your balance stays available until you choose to place an order.",
+            },
+            {
+              title: "Order visibility",
+              body: "Review transaction and order status from your account.",
+            },
+            {
+              title: "Provider-led delivery",
+              body: "Timing and fulfilment depend on the selected service.",
+            },
+            {
+              title: "Payment choice",
+              body: "See the funding options currently available to you in your wallet.",
+            },
+          ].map((item) => (
+            <article key={item.title} className="border-l-4 border-[var(--li)] pl-4">
+              <h2 className="font-black uppercase tracking-tight">{item.title}</h2>
+              <p className="m-0 mt-1 text-sm text-[var(--mu)]">{item.body}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       {/* Services */}
       <section id="services" className="bg-[var(--of)] text-[var(--ink)] py-[110px] relative z-[1]">
         <div className="max-w-[1180px] mx-auto px-6">
           <div className="flex flex-wrap justify-between gap-8 items-end mb-12">
             <h2 className="font-black uppercase tracking-tight text-[clamp(34px,5.4vw,68px)] max-w-[900px] leading-[0.98]">
-              Services that keep{" "}
+              Digital services,{" "}
               <span className="inline-block bg-[var(--bl)] text-white rounded-full px-[0.32em] py-[0.02em] outline outline-2 outline-dashed outline-[var(--li)] outline-offset-[-5px]">
-                moving
-              </span>{" "}
-              after midnight.
+                one place
+              </span>
             </h2>
             <p className="text-[var(--mu)] max-w-[430px] m-0">
-              Every service draws from the same ledger and follows the same hold
-              logic.
+              Explore services in your Galago account. Availability and
+              delivery times can vary by provider and product.
             </p>
           </div>
 
@@ -141,49 +173,24 @@ export default function HomePage() {
                 lime: true,
                 title: (
                   <>
-                    Real
-                    <br />
-                    engagement
-                  </>
-                ),
-                body: "Followers, likes and views in tiered quality, at reseller rates.",
-                panel: (
-                  <>
-                    <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
-                      <span>IG · 1k followers</span>
-                      <span>₦3,200</span>
-                    </div>
-                    <div className="h-2.5 rounded-full bg-white/22 overflow-hidden">
-                      <i className="block h-full w-[70%] bg-[var(--li)] rounded-full" />
-                    </div>
-                    <b className="text-[11px] tracking-[0.08em] uppercase text-center mt-auto opacity-90">
-                      Held until delivery confirms
-                    </b>
-                  </>
-                ),
-              },
-              {
-                lime: false,
-                title: (
-                  <>
                     Airtime
                     <br />
                     &amp; data
                   </>
                 ),
-                body: "Top up the major Nigerian networks from the same wallet.",
+                body: "Top up supported Nigerian mobile networks.",
                 panel: (
                   <>
                     <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
-                      <span>2GB data</span>
-                      <span>₦1,150</span>
+                      <span>Mobile airtime</span>
+                      <span>Top-up</span>
                     </div>
                     <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
-                      <span>Airtime</span>
-                      <span>₦1,000</span>
+                      <span>Mobile data</span>
+                      <span>Plans</span>
                     </div>
                     <b className="text-[11px] tracking-[0.08em] uppercase text-center mt-auto opacity-90">
-                      Instant, network-native
+                      Supported networks
                     </b>
                   </>
                 ),
@@ -192,19 +199,24 @@ export default function HomePage() {
                 lime: false,
                 title: (
                   <>
-                    Virtual
+                    Bill
                     <br />
-                    numbers
+                    payments
                   </>
                 ),
-                body: "Rent numbers for verification flows.",
+                body: "Pay eligible electricity, TV, data and education services.",
                 panel: (
                   <>
-                    <div className="font-extrabold text-[26px] tracking-[0.2em] text-center text-[var(--li)]">
-                      4 8 2 9 1 7
+                    <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
+                      <span>Electricity</span>
+                      <span>Verify</span>
+                    </div>
+                    <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
+                      <span>TV &amp; education</span>
+                      <span>Pay</span>
                     </div>
                     <b className="text-[11px] tracking-[0.08em] uppercase text-center mt-auto opacity-90">
-                      Same hold logic, same ledger
+                      Eligible services
                     </b>
                   </>
                 ),
@@ -213,20 +225,49 @@ export default function HomePage() {
                 lime: false,
                 title: (
                   <>
-                    Cards
+                    Travel
                     <br />
-                    &amp; eSIM
+                    eSIMs
                   </>
                 ),
-                body: "Digital cards and travel eSIMs, no leaving the balance.",
+                body: "Explore supported destinations and data plans.",
                 panel: (
                   <>
-                    <div className="bg-gradient-to-br from-white to-[#cfd0ff] rounded-[10px] p-2.5 text-[var(--ink)] font-extrabold h-[62px] flex flex-col justify-between">
-                      <span>Galago card</span>
-                      <span>•••• 0000</span>
+                    <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
+                      <span>Destinations</span>
+                      <span>Browse</span>
+                    </div>
+                    <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
+                      <span>Data plans</span>
+                      <span>Compare</span>
                     </div>
                     <b className="text-[11px] tracking-[0.08em] uppercase text-center mt-auto opacity-90">
-                      One wallet, global reach
+                      Purchase availability varies
+                    </b>
+                  </>
+                ),
+              },
+              {
+                lime: false,
+                title: (
+                  <>
+                    Order
+                    <br />
+                    tracking
+                  </>
+                ),
+                body: "Follow service requests and transaction updates in your account.",
+                panel: (
+                  <>
+                    <div className="flex justify-between bg-white/14 rounded-lg px-2.5 py-1.5">
+                      <span>Order status</span>
+                      <span>Track</span>
+                    </div>
+                    <div className="h-2.5 rounded-full bg-white/22 overflow-hidden">
+                      <i className="block h-full w-[70%] bg-[var(--li)] rounded-full" />
+                    </div>
+                    <b className="text-[11px] tracking-[0.08em] uppercase text-center mt-auto opacity-90">
+                      Provider updates
                     </b>
                   </>
                 ),
@@ -256,11 +297,15 @@ export default function HomePage() {
           </div>
 
           <div className="pt-[70px] pb-8 text-center font-bold tracking-[0.06em] uppercase text-[13px]">
-            Fund your wallet with
+            Fund your wallet with supported options
             <div className="flex gap-11 justify-center flex-wrap mt-4 text-[22px] tracking-tight normal-case font-extrabold">
               <span>Paystack</span>
-              <span>USDT TRC20</span>
+              <span>USDT · TRC20</span>
             </div>
+            <p className="text-sm normal-case font-medium text-[var(--mu)] mt-3">
+              Available payment methods can vary. Check your wallet before
+              making a deposit.
+            </p>
           </div>
         </div>
       </section>
@@ -269,11 +314,11 @@ export default function HomePage() {
       <section id="how" className="py-[110px] bg-[var(--bl)] text-white">
         <div className="max-w-[1180px] mx-auto px-6">
           <p className="font-black uppercase tracking-tight leading-[1.02] text-[clamp(28px,4.6vw,58px)] max-w-[1000px]">
-            We hold your money until delivery lands{" "}
+            Simple to start. Clear to track.{" "}
             <span className="inline-grid place-items-center w-[0.9em] h-[0.9em] rounded-full bg-[var(--li)] text-[var(--ink)] align-[-0.1em] text-[0.8em] mx-[0.1em]">
               ✱
             </span>{" "}
-            then settle. If it fails, funds release.
+            Order flows follow the selected service.
           </p>
           <HoldDemo />
         </div>
@@ -287,11 +332,12 @@ export default function HomePage() {
           </div>
           <div>
             <h2 className="font-black uppercase tracking-tight text-[clamp(34px,5vw,56px)] leading-[0.98]">
-              Small. Sharp. Awake at night.
+              Your orders don&apos;t have to wait for you.
             </h2>
             <p className="text-[var(--mu)] text-[19px] max-w-[520px] mt-4 mb-7">
-              Galago is the bushbaby, Africa&apos;s nocturnal climber with
-              enormous eyes. Not an owl. The wallet that works while you rest.
+              Galago routes requests through connected service providers and
+              shows status updates in your account. Processing and delivery
+              times depend on the service and provider.
             </p>
             <Link
               href="/auth/signup"
@@ -308,15 +354,53 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section id="faq" className="bg-white text-[var(--ink)] py-[100px]">
+        <div className="max-w-[1180px] mx-auto px-6">
+          <h2 className="font-black uppercase tracking-tight text-[clamp(34px,5vw,56px)] leading-[0.98] mb-10">
+            Good to know
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              {
+                question: "When are wallet funds used?",
+                answer:
+                  "Your balance remains in your wallet until you choose a service and submit an order. The service determines whether funds are reserved or debited at that point.",
+              },
+              {
+                question: "How long does an order take?",
+                answer:
+                  "Timing varies by product and provider. Follow the status shown in your account for the latest available update.",
+              },
+              {
+                question: "What if a purchase fails?",
+                answer:
+                  "Galago uses the provider result to update the order. Where a purchase is confirmed as failed, any applicable refund or release follows that service's payment workflow.",
+              },
+              {
+                question: "Which payment methods can I use?",
+                answer:
+                  "The available wallet funding methods are shown in your account and may vary by configuration and availability.",
+              },
+            ].map((item) => (
+              <details key={item.question} className="rounded-2xl bg-[var(--of)] p-5">
+                <summary className="cursor-pointer font-black">{item.question}</summary>
+                <p className="mb-0 mt-3 text-[var(--mu)]">{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Final CTA */}
       <section className="bg-[var(--li)] text-[var(--ink)] py-[100px] text-center">
         <div className="max-w-[1180px] mx-auto px-6">
           <h2 className="font-black uppercase tracking-tight text-[clamp(34px,5vw,56px)] leading-[0.98] mx-auto mb-4">
-            One ledger. Kobo precision.
+            Digital services. Simplified.
           </h2>
           <p className="max-w-[520px] mx-auto mb-8 font-medium text-[19px]">
-            Settle only when it lands. Failures release funds. That is the
-            contract.
+            Manage your wallet, explore available services and follow your
+            orders in one place.
           </p>
           <Link
             href="/auth/signup"
@@ -328,15 +412,45 @@ export default function HomePage() {
               borderColor: "#000",
             }}
           >
-            Start free
+            Create your account
           </Link>
         </div>
       </section>
 
       <footer className="bg-[var(--ink)] text-[#bfbbe8] py-8 text-sm">
-        <div className="max-w-[1180px] mx-auto px-6 flex flex-wrap justify-between gap-3">
-          <span>© {new Date().getFullYear()} Galago</span>
-          <span>galago.ng, Port Harcourt roots</span>
+        <div className="max-w-[1180px] mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pb-8">
+            <div className="col-span-2 md:col-span-1">
+              <p className="text-white font-black uppercase tracking-wide mb-2">
+                Galago
+              </p>
+              <p className="m-0 max-w-[220px]">
+                Digital services, one wallet.
+              </p>
+            </div>
+            <nav aria-label="Explore" className="flex flex-col items-start gap-2">
+              <h2 className="text-white font-bold mb-1">Explore</h2>
+              <a href="#services" className="hover:text-[var(--li)]">Services</a>
+              <a href="#how" className="hover:text-[var(--li)]">How it works</a>
+              <a href="#faq" className="hover:text-[var(--li)]">FAQs</a>
+            </nav>
+            <nav aria-label="Account" className="flex flex-col items-start gap-2">
+              <h2 className="text-white font-bold mb-1">Account</h2>
+              <Link href="/auth/signin" className="hover:text-[var(--li)]">Sign in</Link>
+              <Link href="/auth/signup" className="hover:text-[var(--li)]">Create account</Link>
+              <a href="mailto:ogumaeluan@gmail.com" className="hover:text-[var(--li)]">Contact support</a>
+            </nav>
+            <nav aria-label="Legal" className="flex flex-col items-start gap-2">
+              <h2 className="text-white font-bold mb-1">Policies</h2>
+              <Link href="/legal#privacy" className="hover:text-[var(--li)]">Privacy policy</Link>
+              <Link href="/legal#terms" className="hover:text-[var(--li)]">Terms &amp; conditions</Link>
+              <Link href="/legal#refunds" className="hover:text-[var(--li)]">Refunds &amp; cancellations</Link>
+            </nav>
+          </div>
+          <div className="border-t border-white/20 pt-5 flex flex-wrap justify-between gap-3">
+            <span>© {new Date().getFullYear()} Galago</span>
+            <span>Operating in Nigeria</span>
+          </div>
         </div>
       </footer>
     </main>

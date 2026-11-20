@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useDashboardLanguage } from "@/components/DashboardLanguageProvider";
+import { translate } from "@/lib/dashboard-language";
 
 function formatNaira(kobo: number) {
   return new Intl.NumberFormat("en-NG", {
@@ -22,6 +24,8 @@ type Order = {
 };
 
 export default function OrdersPage() {
+  const locale = useDashboardLanguage();
+  const t = (source: string) => translate(locale, source);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -100,17 +104,17 @@ export default function OrdersPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black uppercase tracking-tight text-white">
-            Orders
+            {t("Orders")}
           </h1>
           <p className="text-white/65 text-[13px] mt-1">
-            Hold → deliver (settle) or release
+            {t("Hold → deliver (settle) or release")}
           </p>
         </div>
         <Link
           href="/dashboard/orders/new"
           className="btn-galago btn-galago-sm shrink-0"
         >
-          New order
+          {t("New order")}
         </Link>
       </div>
 
@@ -126,15 +130,15 @@ export default function OrdersPage() {
       )}
 
       {loading ? (
-        <p className="text-white/60 text-[13px]">Loading…</p>
+        <p className="text-white/60 text-[13px]">{t("Loading…")}</p>
       ) : orders.length === 0 ? (
         <div className="bg-white text-[var(--ink)] rounded-[22px] px-6 py-14 text-center shadow-[0_10px_30px_rgba(10,5,90,0.15)]">
-          <p className="text-[var(--mu)] text-[13px]">No orders yet.</p>
+          <p className="text-[var(--mu)] text-[13px]">{t("No orders yet.")}</p>
           <Link
             href="/dashboard/orders/new"
             className="inline-block mt-3 text-[var(--bl)] text-[13px] font-bold hover:underline"
           >
-            Place your first order
+            {t("Place your first order")}
           </Link>
         </div>
       ) : (
@@ -144,11 +148,11 @@ export default function OrdersPage() {
               <thead>
                 <tr className="border-b border-[var(--ink)]/10 text-[var(--mu)] text-left">
                   <th className="px-4 py-2.5 font-semibold">ID</th>
-                  <th className="px-4 py-2.5 font-semibold">Status</th>
-                  <th className="px-4 py-2.5 font-semibold">Qty</th>
-                  <th className="px-4 py-2.5 font-semibold">Amount</th>
-                  <th className="px-4 py-2.5 font-semibold">Date</th>
-                  <th className="px-4 py-2.5 font-semibold">Actions</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("Status")}</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("Qty")}</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("Amount")}</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("Date")}</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("Actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -172,7 +176,7 @@ export default function OrdersPage() {
                                 : ""
                         }
                       >
-                        {o.status}
+                        {t(o.status)}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 tabular-nums">{o.quantity}</td>
@@ -191,7 +195,7 @@ export default function OrdersPage() {
                             onClick={() => complete(o.id)}
                             className="text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--li)] text-[var(--ink)] border border-[var(--ink)] disabled:opacity-50"
                           >
-                            {busyId === o.id ? "…" : "Settle"}
+                            {busyId === o.id ? "…" : t("Settle")}
                           </button>
                           <button
                             type="button"
@@ -199,7 +203,7 @@ export default function OrdersPage() {
                             onClick={() => release(o.id)}
                             className="text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full border border-[var(--ink)]/30 text-[var(--ink)] disabled:opacity-50"
                           >
-                            Release
+                            {t("Release")}
                           </button>
                         </div>
                       ) : (

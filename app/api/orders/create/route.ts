@@ -31,138 +31,31 @@ export async function POST(req: NextRequest) {
     }
 
     const admin = createAdminClient();
-
-    const { data: offer, error: offerErr } = await admin
-      .from("offers")
-      .select("*, services(name, platform_id)")
-      .eq("id", offer_id)
-      .eq("is_active", true)
-      .single();
-
-    if (offerErr || !offer) {
-      return NextResponse.json({ error: "Offer not found" }, { status: 404 });
-    }
-
-    if (quantity < offer.min_qty || quantity > offer.max_qty) {
-      return NextResponse.json(
-        {
-          error: `Quantity must be between ${offer.min_qty} and ${offer.max_qty}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    const amountKobo = offer.rate_kobo * quantity;
     const key = idempotency_key || randomUUID();
-
-    const { data: existing } = await admin
-      .from("orders")
-      .select("id, status")
-      .eq("idempotency_key", key)
-      .maybeSingle();
-
-    if (existing) {
-      return NextResponse.json({
-        order_id: existing.id,
-        status: existing.status,
-      });
-    }
-
-    const { data: wallet } = await admin
-      .from("wallets")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!wallet || wallet.balance_kobo < amountKobo) {
-      return NextResponse.json(
-        {
-          error: "Insufficient balance. Fund your wallet first.",
-          need_kobo: amountKobo,
-          balance_kobo: wallet?.balance_kobo ?? 0,
-        },
-        { status: 402 }
-      );
-    }
-
-    const newBalance = wallet.balance_kobo - amountKobo;
-
-    const { data: updatedWallet, error: walletErr } = await admin
-      .from("wallets")
-      .update({
-        balance_kobo: newBalance,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", wallet.id)
-      .eq("balance_kobo", wallet.balance_kobo)
-      .select("id")
-      .maybeSingle();
-
-    if (walletErr || !updatedWallet) {
-      return NextResponse.json(
-        { error: "Could not hold funds. Try again." },
-        { status: 409 }
-      );
-    }
-
-    const { data: order, error: orderErr } = await admin
-      .from("orders")
-      .insert({
-        user_id: user.id,
-        offer_id,
-        quantity,
-        target_link: target_link || null,
-        status: "held",
-        amount_kobo: amountKobo,
-        held_amount_kobo: amountKobo,
-        idempotency_key: key,
-        metadata: {
-          service_name: (offer as { services?: { name?: string } }).services?.name,
-          rate_kobo: offer.rate_kobo,
-        },
-      })
-      .select()
-      .single();
-
-    if (orderErr || !order) {
-      await admin
-        .from("wallets")
-        .update({ balance_kobo: wallet.balance_kobo })
-        .eq("id", wallet.id);
-
-      console.error(orderErr);
-      return NextResponse.json(
-        {
-          error: "Failed to create order",
-          detail: orderErr?.message,
-        },
-        { status: 500 }
-      );
-    }
-
-    await admin.from("ledger_entries").insert({
-      wallet_id: wallet.id,
-      user_id: user.id,
-      type: "hold",
-      amount_kobo: -amountKobo,
-      balance_after_kobo: newBalance,
-      reference_type: "order",
-      reference_id: order.id,
-      description: `Hold for order ${order.id.slice(0, 8)}`,
+    const { data: result, error } = await admin.rpc("hold_order", {
+      p_user_id: user.id,
+      p_offer_id: offer_id,
+      p_quantity: quantity,
+      p_target_link: target_link || null,
+      p_idempotency_key: key,
     });
-
-    await admin.from("order_events").insert({
-      order_id: order.id,
-      status: "held",
-      note: "Funds held. Awaiting delivery / mark complete.",
-    });
-
-    return NextResponse.json({
-      order_id: order.id,
-      status: order.status,
-      amount_kobo: amountKobo,
-      balance_after_kobo: newBalance,
-    });
+    if (error) {
+      console.error("hold_order RPC:", error);
+      return NextResponse.json({ error: "Could not hold funds" }, { status: 500 });
+    }
+    const value = result as Record<string, unknown>;
+    if (!value.ok) {
+      const code = value.code;
+      if (code === "offer_not_found") return NextResponse.json({ error: "Offer not found" }, { status: 404 });
+      if (code === "invalid_quantity") {
+        return NextResponse.json({ error: `Quantity must be between ${value.min_qty} and ${value.max_qty}` }, { status: 400 });
+      }
+      if (code === "insufficient_balance") {
+        return NextResponse.json({ error: "Insufficient balance. Fund your wallet first.", need_kobo: value.need_kobo, balance_kobo: value.balance_kobo }, { status: 402 });
+      }
+      return NextResponse.json({ error: "Could not hold funds" }, { status: 400 });
+    }
+    return NextResponse.json(value);
   } catch (err) {
     console.error(err);
     return NextResponse.json(

@@ -31,7 +31,14 @@ export default function SignUpPage() {
     setError(null);
 
     const origin = appOrigin();
-    const supabase = createClient();
+    let supabase;
+    try {
+      supabase = createClient();
+    } catch {
+      setError("Platform setup is incomplete. Contact the administrator.");
+      setLoading(false);
+      return;
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -53,17 +60,18 @@ export default function SignUpPage() {
 
   async function handleGoogle() {
     const origin = appOrigin();
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${origin}/auth/callback`,
-        queryParams: {
-          access_type: "offline",
-          prompt: "consent",
+    try {
+      const supabase = createClient();
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${origin}/auth/callback`,
+          queryParams: { access_type: "offline", prompt: "consent" },
         },
-      },
-    });
+      });
+    } catch {
+      setError("Platform setup is incomplete. Contact the administrator.");
+    }
   }
 
   if (success) {

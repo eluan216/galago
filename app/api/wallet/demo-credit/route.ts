@@ -32,53 +32,30 @@ export async function POST() {
     }
 
     const admin = createAdminClient();
-
-    let { data: wallet } = await admin
-      .from("wallets")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!wallet) {
-      const { data: created, error } = await admin
-        .from("wallets")
-        .insert({ user_id: user.id, balance_kobo: 0, currency: "NGN" })
-        .select()
-        .single();
-      if (error || !created) {
-        return NextResponse.json(
-          { error: "Could not create wallet", detail: error?.message },
-          { status: 500 }
-        );
-      }
-      wallet = created;
+    const { data: result, error } = await admin.rpc("credit_wallet", {
+      p_user_id: user.id,
+      p_amount_kobo: DEMO_KOBO,
+      p_type: "fund_fiat",
+      p_reference_type: "demo_credit",
+      p_reference_id: null,
+      p_description: "Demo credit for testing hold → settle loop",
+      p_metadata: { one_time: true },
+    });
+    if (error) {
+      console.error("demo credit RPC:", error);
+      return NextResponse.json({ error: "Demo credit failed" }, { status: 500 });
     }
-
-    const newBalance = wallet.balance_kobo + DEMO_KOBO;
-
-    await admin
-      .from("wallets")
-      .update({
-        balance_kobo: newBalance,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", wallet.id);
-
-    await admin.from("ledger_entries").insert({
-      wallet_id: wallet.id,
-      user_id: user.id,
-      type: "fund_fiat",
-      amount_kobo: DEMO_KOBO,
-      balance_after_kobo: newBalance,
-      reference_type: "demo",
-      description: "Demo credit for testing hold → settle loop",
-    });
-
-    return NextResponse.json({
-      ok: true,
-      credited_kobo: DEMO_KOBO,
-      balance_kobo: newBalance,
-    });
+    const value = result as Record<string, unknown>;
+    if (value.already_processed) {
+      return NextResponse.json(
+        { error: "Demo credit has already been claimed for this account" },
+        { status: 409 }
+      );
+    }
+    if (!value.ok) {
+      return NextResponse.json({ error: "Demo credit failed" }, { status: 500 });
+    }
+    return NextResponse.json(value);
   } catch (err) {
     console.error(err);
     return NextResponse.json(

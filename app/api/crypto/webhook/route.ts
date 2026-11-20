@@ -51,35 +51,44 @@ export async function POST(req: NextRequest) {
 
     if (payment_status === "finished" || payment_status === "confirmed") {
       const amountKobo = deposit.amount_ngn_kobo;
-
-      const { data: wallet } = await supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", deposit.user_id)
-        .single();
-
-      if (!wallet) {
-        return NextResponse.json({ error: "Wallet not found" }, { status: 500 });
+      const expectedUsdt = Number(deposit.amount_crypto);
+      const receivedUsdt = Number(pay_amount);
+      if (
+        !Number.isFinite(receivedUsdt) ||
+        !Number.isFinite(expectedUsdt) ||
+        Math.abs(receivedUsdt - expectedUsdt) > 0.01
+      ) {
+        await supabase
+          .from("crypto_deposits")
+          .update({
+            status: "failed",
+            metadata: {
+              ...deposit.metadata,
+              error: "Paid amount mismatch",
+              received_usdt: pay_amount,
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", deposit.id);
+        return NextResponse.json({ error: "Paid amount mismatch" }, { status: 400 });
       }
 
-      const newBalance = wallet.balance_kobo + amountKobo;
-
-      await supabase
-        .from("wallets")
-        .update({ balance_kobo: newBalance, updated_at: new Date().toISOString() })
-        .eq("id", wallet.id);
-
-      await supabase.from("ledger_entries").insert({
-        wallet_id: wallet.id,
-        user_id: deposit.user_id,
-        type: "crypto_deposit",
-        amount_kobo: amountKobo,
-        balance_after_kobo: newBalance,
-        reference_type: "crypto_deposit",
-        reference_id: deposit.id,
-        description: `USDT deposit via ${deposit.network}`,
-        metadata: { provider: "nowpayments", pay_amount, pay_currency },
+      const { data: result, error } = await supabase.rpc("credit_wallet", {
+        p_user_id: deposit.user_id,
+        p_amount_kobo: amountKobo,
+        p_type: "crypto_deposit",
+        p_reference_type: "crypto_deposit",
+        p_reference_id: deposit.id,
+        p_description: `USDT deposit via ${deposit.network}`,
+        p_metadata: { provider: "nowpayments", pay_amount, pay_currency },
       });
+      if (error) {
+        console.error("Crypto credit RPC:", error);
+        return NextResponse.json({ error: "Wallet credit failed" }, { status: 500 });
+      }
+      if (!(result as Record<string, unknown>).ok) {
+        return NextResponse.json({ error: "Wallet not found" }, { status: 500 });
+      }
 
       await supabase
         .from("crypto_deposits")
@@ -89,7 +98,8 @@ export async function POST(req: NextRequest) {
           amount_crypto: pay_amount || outcome_amount,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", deposit.id);
+        .eq("id", deposit.id)
+        .eq("status", "pending");
     } else if (payment_status === "expired" || payment_status === "failed") {
       await supabase
         .from("crypto_deposits")

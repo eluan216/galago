@@ -12,7 +12,7 @@ export function HoldDemo() {
   const [sd, setSd] = useState(0);
   const [step, setStep] = useState(1);
   const [msg, setMsg] = useState(
-    "Illustration. Try it: order 1k Instagram followers for ₦3,200."
+    "Illustration only. Try a ₦3,200 hold — no real money or provider order."
   );
   const [msgColor, setMsgColor] = useState("");
   const [fail, setFail] = useState(false);
@@ -63,17 +63,17 @@ export function HoldDemo() {
           {
             n: 1,
             title: "Fund",
-            body: "Paystack for Naira or USDT on TRC20. Credit hits your ledger immediately.",
+            body: "Use a currently available payment method. Successful deposits appear in your wallet.",
           },
           {
             n: 2,
             title: "Order",
-            body: "Pick a service and quantity. We reserve the exact amount. It is a hold, not a charge.",
+            body: "For hold-based marketplace orders, the exact amount is reserved while delivery is pending.",
           },
           {
             n: 3,
             title: "Settle",
-            body: "When delivery confirms, the hold becomes a charge. If it fails, funds release.",
+            body: "A confirmed delivery settles the reserve. A confirmed failure releases it.",
           },
         ].map((s) => (
           <div
@@ -145,6 +145,10 @@ export function HoldDemo() {
             Delivery fails
           </label>
         </div>
+        <p className="mt-5 mb-0 text-sm text-[#e7e5ff]">
+          This illustration covers hold-based marketplace orders. Bill payments
+          and eSIM purchases use product-specific provider and refund workflows.
+        </p>
       </div>
     </div>
   );

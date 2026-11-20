@@ -1,3 +1,5 @@
+import { createHmac, timingSafeEqual } from "crypto";
+
 /**
  * NOWPayments helpers (crypto funding)
  * ------------------------------------
@@ -81,17 +83,34 @@ export async function createNowPaymentsInvoice(params: CreateInvoiceParams) {
   };
 }
 
-/** IPN check — allow through if secret is missing in early setup (log only). */
+/** Verify NOWPayments IPN using the provider HMAC-SHA512 signature. */
 export function verifyNowPaymentsIPN(
-  _body: unknown,
+  body: unknown,
   signature: string | null
 ): boolean {
   const secret = process.env.NOWPAYMENTS_IPN_SECRET;
   if (!secret) {
-    console.warn("NOWPAYMENTS_IPN_SECRET not set — accepting IPN without verify");
-    return true;
+    console.error("NOWPAYMENTS_IPN_SECRET not set — rejecting IPN");
+    return false;
   }
   if (!signature) return false;
-  // Full HMAC can be added later; presence of secret + signature is enough for beta
-  return true;
+  if (!body || typeof body !== "object") return false;
+
+  const sorted = JSON.stringify(sortObjectKeys(body as Record<string, unknown>));
+  const expected = createHmac("sha512", secret).update(sorted).digest("hex");
+  const supplied = Buffer.from(signature.trim().toLowerCase(), "utf8");
+  const expectedBuffer = Buffer.from(expected.toLowerCase(), "utf8");
+  return supplied.length === expectedBuffer.length &&
+    timingSafeEqual(supplied, expectedBuffer);
+}
+
+function sortObjectKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortObjectKeys);
+  if (!value || typeof value !== "object") return value;
+  return Object.keys(value as Record<string, unknown>)
+    .sort()
+    .reduce<Record<string, unknown>>((sorted, key) => {
+      sorted[key] = sortObjectKeys((value as Record<string, unknown>)[key]);
+      return sorted;
+    }, {});
 }

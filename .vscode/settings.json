@@ -1,0 +1,4 @@
+{
+  // Supabase migrations use PostgreSQL; the MSSQL extension parses SQL as T-SQL.
+  "mssql.intelliSense.enableErrorChecking": false
+}
