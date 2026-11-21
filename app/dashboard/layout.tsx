@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { GalagoMark } from "@/components/logo";
 import { DashboardLanguageProvider } from "@/components/DashboardLanguageProvider";
 import { DashboardMenu } from "@/components/DashboardMenu";
+import { DashboardMobileNav } from "@/components/DashboardMobileNav";
 import { getDashboardLocale } from "@/lib/dashboard-language-server";
 import { translate } from "@/lib/dashboard-language";
 
@@ -21,8 +22,8 @@ export default async function DashboardLayout({
         <div className="glass-panel max-w-md p-7 text-center">
           <h1 className="text-xl font-black uppercase">Platform setup required</h1>
           <p className="text-white/70 text-sm mt-3">
-            Supabase environment variables are missing. Add the values from <code>.env.example</code>,
-            then restart the app.
+            Supabase environment variables are missing. Add the values from{" "}
+            <code>.env.example</code>, then restart the app.
           </p>
         </div>
       </main>
@@ -45,20 +46,21 @@ export default async function DashboardLayout({
 
   return (
     <DashboardLanguageProvider locale={locale}>
-    <div className="min-h-screen flex flex-col bg-[var(--bl)] text-white">
-      <header className="sticky top-0 z-50 px-4 sm:px-6 py-3">
-        <div className="glass-nav max-w-3xl mx-auto rounded-full flex items-center justify-between gap-3 py-1.5 pl-2.5 pr-3">
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="min-h-screen flex flex-col bg-[var(--bl)] text-white">
+        <header className="sticky top-0 z-50 px-4 sm:px-6 py-3">
+          <div className="max-w-[1080px] mx-auto flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="flex items-center gap-1.5 shrink-0 hover:opacity-90"
+              className="flex items-center gap-2 shrink-0 hover:opacity-90 font-extrabold text-[20px] tracking-tight text-white"
             >
-              <GalagoMark className="w-8 h-8" />
-              <span className="font-black uppercase text-[13px] tracking-tight hidden sm:inline">
-                Galago
-              </span>
+              <GalagoMark className="w-10 h-10" />
+              <span className="hidden sm:inline">Galago</span>
             </Link>
-            <nav className="flex min-w-0 max-w-[50vw] sm:max-w-none items-center gap-0.5 overflow-x-auto whitespace-nowrap text-[11px] font-bold uppercase tracking-wide [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+
+            <nav
+              className="hidden md:flex items-center gap-1 p-1 rounded-full glass-nav ml-2"
+              aria-label="Main"
+            >
               {[
                 ["/dashboard", "Overview"],
                 ["/dashboard/wallet", "Wallet"],
@@ -70,27 +72,47 @@ export default async function DashboardLayout({
                 <Link
                   key={href}
                   href={href}
-                  className="shrink-0 px-2.5 py-1.5 rounded-full text-white/75 hover:text-white hover:bg-white/10 transition-colors"
+                  className="px-3.5 py-2.5 rounded-full text-white/80 hover:text-white hover:bg-white/12 text-[14px] font-semibold transition-colors"
                 >
                   {translate(locale, label)}
                 </Link>
               ))}
             </nav>
-          </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex-1" />
+
+            <Link
+              href="/dashboard/telegram"
+              className="hidden sm:inline-flex h-11 w-11 items-center justify-center rounded-full glass-nav text-white hover:bg-white/20"
+              aria-label="Telegram"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 4L3 11l6 2.5L11 20l3-4.5 5 3.5z" />
+                <path d="M9 13.5L21 4" />
+              </svg>
+            </Link>
+
             <DashboardMenu
               fullName={profile?.full_name || null}
               email={profile?.email || user.email}
             />
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="flex-1 p-4 sm:p-6 max-w-3xl mx-auto w-full pb-12">
-        {children}
-      </main>
-    </div>
+        <main className="flex-1 px-4 sm:px-6 max-w-[1080px] mx-auto w-full pb-[calc(120px+env(safe-area-inset-bottom))] md:pb-14">
+          {children}
+        </main>
+
+        <DashboardMobileNav />
+      </div>
     </DashboardLanguageProvider>
   );
 }
