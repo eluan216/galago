@@ -20,6 +20,7 @@ type Order = {
   amount_kobo: number;
   quantity: number;
   target_link: string | null;
+  provider_order_id?: string | null;
   created_at: string;
 };
 
@@ -41,7 +42,9 @@ export default function OrdersPage() {
 
     const { data } = await supabase
       .from("orders")
-      .select("id, status, amount_kobo, quantity, target_link, created_at")
+      .select(
+        "id, status, amount_kobo, quantity, target_link, provider_order_id, created_at"
+      )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(50);
@@ -87,6 +90,30 @@ export default function OrdersPage() {
       } else {
         setMessage(
           `Hold released — ${formatNaira(data.released_kobo || 0)} returned`
+        );
+        await load();
+      }
+    } catch {
+      setError("Network error");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function syncProvider(id: string) {
+    setBusyId(id);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/orders/${id}/sync`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || data.detail || "Sync failed");
+      } else {
+        const action = data.action || "ok";
+        const pStatus = data.provider?.status || "";
+        setMessage(
+          `Synced · ${action}${pStatus ? ` (provider: ${pStatus})` : ""}`
         );
         await load();
       }
@@ -169,11 +196,13 @@ export default function OrdersPage() {
                         className={
                           o.status === "held"
                             ? "text-amber-600 font-semibold"
-                            : o.status === "completed"
-                              ? "text-emerald-600 font-semibold"
-                              : o.status === "failed"
-                                ? "text-rose-600 font-semibold"
-                                : ""
+                            : o.status === "processing"
+                              ? "text-sky-600 font-semibold"
+                              : o.status === "completed"
+                                ? "text-emerald-600 font-semibold"
+                                : o.status === "failed"
+                                  ? "text-rose-600 font-semibold"
+                                  : ""
                         }
                       >
                         {t(o.status)}
@@ -189,6 +218,16 @@ export default function OrdersPage() {
                     <td className="px-4 py-2.5">
                       {openStatuses.includes(o.status) ? (
                         <div className="flex flex-wrap gap-1.5">
+                          {o.provider_order_id && (
+                            <button
+                              type="button"
+                              disabled={busyId === o.id}
+                              onClick={() => syncProvider(o.id)}
+                              className="text-[11px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--bl)] text-white disabled:opacity-50"
+                            >
+                              {busyId === o.id ? "…" : "Sync"}
+                            </button>
+                          )}
                           <button
                             type="button"
                             disabled={busyId === o.id}
@@ -219,11 +258,10 @@ export default function OrdersPage() {
       )}
 
       <p className="text-white/50 text-[11px] leading-relaxed">
-        <strong className="text-white/70">Settle</strong> = delivery confirmed
-        (hold becomes permanent charge).{" "}
-        <strong className="text-white/70">Release</strong> = failed job, funds
-        return to wallet. Replace these buttons with provider webhooks in
-        production.
+        <strong className="text-white/70">Sync</strong> polls the provider and
+        settles or releases automatically.{" "}
+        <strong className="text-white/70">Settle</strong> /{" "}
+        <strong className="text-white/70">Release</strong> are manual overrides.
       </p>
     </div>
   );
