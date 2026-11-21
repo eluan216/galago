@@ -27,6 +27,17 @@ function formatNaira(kobo: number) {
   }).format(kobo / 100);
 }
 
+// Per-unit rates can be a fraction of a kobo (cheap view services), so show up
+// to four decimals instead of collapsing them to ₦0.00.
+function formatUnitNaira(kobo: number) {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  }).format(kobo / 100);
+}
+
 const inputClass =
   "w-full bg-[var(--of)] border-2 border-[var(--ink)]/15 rounded-xl px-3.5 py-2.5 text-[14px] text-[var(--ink)] focus:outline-none focus:border-[var(--bl)] transition";
 
@@ -84,7 +95,10 @@ export default function NewOrderPage() {
     : offers;
 
   const selectedOffer = offers.find((o) => o.id === offerId);
-  const totalKobo = selectedOffer ? selectedOffer.rate_kobo * quantity : 0;
+  // Mirrors hold_order(): the hold is rounded up to a whole kobo.
+  const totalKobo = selectedOffer
+    ? Math.max(1, Math.ceil(selectedOffer.rate_kobo * quantity))
+    : 0;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -184,7 +198,7 @@ export default function NewOrderPage() {
             <option value="">{t("Select a service")}</option>
             {filteredOffers.map((o) => (
               <option key={o.id} value={o.id}>
-                {o.name} · {formatNaira(o.rate_kobo)}/unit
+                {o.name} · {formatUnitNaira(o.rate_kobo)}/unit
               </option>
             ))}
           </select>

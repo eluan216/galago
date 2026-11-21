@@ -46,7 +46,7 @@ export default async function DashboardLayout({
 
   return (
     <DashboardLanguageProvider locale={locale}>
-      <div className="min-h-screen flex flex-col bg-[var(--bl)] text-white">
+      <div className="dash-shell min-h-screen flex flex-col text-white">
         <header className="sticky top-0 z-50 px-4 sm:px-6 py-3">
           <div className="max-w-[1080px] mx-auto flex items-center gap-3">
             <Link
@@ -107,7 +107,7 @@ export default async function DashboardLayout({
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 max-w-[1080px] mx-auto w-full pb-[calc(120px+env(safe-area-inset-bottom))] md:pb-14">
+        <main className="relative z-10 flex-1 px-4 sm:px-6 max-w-[1080px] mx-auto w-full pb-[calc(120px+env(safe-area-inset-bottom))] md:pb-14">
           {children}
         </main>
 
