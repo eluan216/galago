@@ -338,7 +338,11 @@ async function handleMessage(
     }
     const nextState = { ...state, target_link: command, step: "confirm" as const };
     await saveState(telegramUserId, nextState);
-    const total = (nextState.rate_kobo || 0) * (nextState.quantity || 0);
+    // Per-unit rates can be fractional kobo; hold_order() rounds the total up.
+    const total = Math.max(
+      1,
+      Math.ceil((nextState.rate_kobo || 0) * (nextState.quantity || 0))
+    );
     await sendMessage(
       chatId,
       `Review your order:\n${nextState.offer_name}\nQuantity: ${nextState.quantity}\nTarget: ${command}\nTotal held: ${formatNaira(total)}\n\nConfirm to place the order. Funds are held according to the service workflow.`,
