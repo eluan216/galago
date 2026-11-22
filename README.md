@@ -120,7 +120,7 @@ eligibility, provider funding, and a live test are confirmed. The app does not
 mark an eSIM order delivered until a usable provider profile is confirmed.
 
 eSIM prices are converted to naira using Frankfurter reference rates and the
-current 7% markup. The rates are not real-time market quotes. The wallet stays
+current 10% markup. The rates are not real-time market quotes. The wallet stays
 naira-denominated; display-currency selection does not change the stored
 balance.
 
