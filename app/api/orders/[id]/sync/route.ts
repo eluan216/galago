@@ -74,7 +74,48 @@ export async function POST(
 
     const mapped = mapOwletStatus(remote.status);
 
-    if (mapped.action === "settle") {
+    if (mapped.action === "settle_partial") {
+      // Owlet reports how much it could not deliver in `remains`, and refunds
+      // that part to the Owlet wallet. Charge only what landed and return the
+      // rest of the hold to the customer.
+      const remains = Number(remote.remains);
+      const delivered = Number.isFinite(remains)
+        ? Math.min(
+            order.quantity,
+            Math.max(0, order.quantity - Math.floor(remains))
+          )
+        : null;
+
+      if (delivered !== null && delivered < order.quantity) {
+        const { data: result, error } = await admin.rpc(
+          "settle_partial_order",
+          {
+            p_user_id: user.id,
+            p_order_id: id,
+            p_delivered_qty: delivered,
+          }
+        );
+        if (error) {
+          return NextResponse.json(
+            { error: "Partial settle failed", detail: error.message },
+            { status: 500 }
+          );
+        }
+        return NextResponse.json({
+          ok: true,
+          action: "settle_partial",
+          delivered_qty: delivered,
+          ordered_qty: order.quantity,
+          provider: remote,
+          result,
+        });
+      }
+
+      // No usable `remains` — fall through to a full settle rather than
+      // guessing at a delivery count.
+    }
+
+    if (mapped.action === "settle" || mapped.action === "settle_partial") {
       const { data: result, error } = await admin.rpc("complete_order", {
         p_user_id: user.id,
         p_order_id: id,
