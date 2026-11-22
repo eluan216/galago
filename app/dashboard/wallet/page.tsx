@@ -9,6 +9,10 @@ import {
 } from "@/lib/currency-format";
 import { useDashboardLanguage } from "@/components/DashboardLanguageProvider";
 import { translate } from "@/lib/dashboard-language";
+import {
+  CRYPTO_PAY_OPTIONS,
+  MIN_USD_DEPOSIT,
+} from "@/lib/crypto/currencies";
 
 function formatNaira(kobo: number) {
   return new Intl.NumberFormat("en-NG", {
@@ -30,6 +34,7 @@ type LedgerEntry = {
 type CryptoDeposit = {
   id: string;
   network: string;
+  currency?: string | null;
   amount_ngn_kobo: number | null;
   amount_crypto?: number | null;
   status: string;
@@ -72,7 +77,8 @@ function WalletContent() {
   const [ratesError, setRatesError] = useState<string | null>(null);
   const [ledger, setLedger] = useState<LedgerEntry[]>([]);
   const [deposits, setDeposits] = useState<CryptoDeposit[]>([]);
-  const [usdtAmount, setUsdtAmount] = useState("10");
+  const [usdAmount, setUsdAmount] = useState(String(MIN_USD_DEPOSIT));
+  const [payCurrency, setPayCurrency] = useState(CRYPTO_PAY_OPTIONS[0]!.id);
   const [fiatAmount, setFiatAmount] = useState("2000");
   const [loading, setLoading] = useState(false);
   const [fiatLoading, setFiatLoading] = useState(false);
@@ -141,7 +147,7 @@ function WalletContent() {
     const { data: crypto } = await supabase
       .from("crypto_deposits")
       .select(
-        "id, network, amount_ngn_kobo, amount_crypto, status, pay_url, created_at"
+        "id, network, currency, amount_ngn_kobo, amount_crypto, status, pay_url, created_at"
       )
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
@@ -175,9 +181,9 @@ function WalletContent() {
     setError(null);
     setMessage(null);
 
-    const usdt = Number(usdtAmount);
-    if (!usdt || usdt < 10) {
-      setError("Minimum is 10 USDT");
+    const usd = Number(usdAmount);
+    if (!usd || usd < MIN_USD_DEPOSIT) {
+      setError(`Minimum is $${MIN_USD_DEPOSIT} USD`);
       setLoading(false);
       return;
     }
@@ -186,7 +192,10 @@ function WalletContent() {
       const res = await fetch("/api/crypto/create-invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount_usdt: usdt, network: "TRC20" }),
+        body: JSON.stringify({
+          amount_usd: usd,
+          pay_currency: payCurrency,
+        }),
       });
 
       const data = await res.json();
@@ -258,6 +267,10 @@ function WalletContent() {
       ? null
       : convertNgnKoboToCurrency(balance, displayCurrency, rates);
 
+  const selectedPay =
+    CRYPTO_PAY_OPTIONS.find((o) => o.id === payCurrency) ||
+    CRYPTO_PAY_OPTIONS[0]!;
+
   return (
     <div className="space-y-6">
       <div>
@@ -265,7 +278,7 @@ function WalletContent() {
           {t("Wallet")}
         </h1>
         <p className="text-white/65 text-[13px] mt-1">
-          {t("Fund with Naira or USDT. One balance for everything.")}
+          {t("Fund with Naira or crypto. One balance for everything.")}
         </p>
       </div>
 
@@ -303,7 +316,9 @@ function WalletContent() {
             ))}
         </select>
         <p className="text-[11px] text-[var(--mu)] mt-2">
-          {t("Display conversion only; your spendable balance and all charges remain in NGN.")}
+          {t(
+            "Display conversion only; your spendable balance and all charges remain in NGN."
+          )}
           {ratesUpdatedAt
             ? ` Rates updated ${new Date(ratesUpdatedAt).toLocaleString()}.`
             : ""}
@@ -369,38 +384,57 @@ function WalletContent() {
 
       <div className={cardClass}>
         <h2 className="text-[15px] font-black uppercase tracking-tight">
-          {t("Fund with USDT")}
+          {t("Fund with crypto")}
         </h2>
         <p className="text-[var(--mu)] text-[13px] mt-1 mb-4">
-          {t("Amount in USDT. TRC20. Credited to Naira after confirmation.")}
+          {t(
+            "Enter a USD amount, pick a coin, pay on-chain. Credited to Naira after confirmation."
+          )}
         </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
             <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
-              {t("Amount (USDT)")}
+              {t("Amount (USD)")}
             </label>
             <input
               type="number"
-              value={usdtAmount}
-              onChange={(e) => setUsdtAmount(e.target.value)}
-              min={10}
+              value={usdAmount}
+              onChange={(e) => setUsdAmount(e.target.value)}
+              min={MIN_USD_DEPOSIT}
               step={1}
               className={inputClass}
-              placeholder="10"
+              placeholder={String(MIN_USD_DEPOSIT)}
             />
           </div>
-          <div className="flex items-end">
-            <button
-              onClick={handleCryptoFund}
-              disabled={loading}
-              className="w-full sm:w-auto inline-flex items-center justify-center text-[12px] font-extrabold uppercase tracking-wide px-5 py-2.5 rounded-full border-2 border-[var(--ink)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white transition disabled:opacity-50"
+          <div>
+            <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
+              {t("Pay with")}
+            </label>
+            <select
+              value={payCurrency}
+              onChange={(e) => setPayCurrency(e.target.value)}
+              className={inputClass}
             >
-              {loading ? t("Creating invoice…") : t("Pay with USDT")}
-            </button>
+              {CRYPTO_PAY_OPTIONS.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
+        <button
+          onClick={handleCryptoFund}
+          disabled={loading}
+          className="w-full sm:w-auto inline-flex items-center justify-center text-[12px] font-extrabold uppercase tracking-wide px-5 py-2.5 rounded-full border-2 border-[var(--ink)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white transition disabled:opacity-50"
+        >
+          {loading
+            ? t("Creating invoice…")
+            : `${t("Pay with")} ${selectedPay.ticker}`}
+        </button>
         <p className="text-[var(--mu)] text-[11px] mt-3">
-          {t("Minimum 10 USDT · Network TRC20 only")}
+          {t("Minimum")} ${MIN_USD_DEPOSIT} USD · {selectedPay.network} ·{" "}
+          {t("Wallet stays in NGN")}
         </p>
       </div>
 
@@ -417,12 +451,16 @@ function WalletContent() {
               >
                 <div>
                   <p className="text-[13px] tabular-nums">
-                    {d.amount_crypto != null
-                      ? `${d.amount_crypto} USDT`
-                      : d.amount_ngn_kobo
-                        ? formatNaira(d.amount_ngn_kobo)
+                    {d.amount_ngn_kobo
+                      ? formatNaira(d.amount_ngn_kobo)
+                      : d.amount_crypto != null
+                        ? `${d.amount_crypto} ${d.currency || ""}`
                         : "—"}
-                    <span className="text-white/60"> · {d.network}</span>
+                    <span className="text-white/60">
+                      {" "}
+                      · {(d.currency || "crypto").toUpperCase()}
+                      {d.network ? ` · ${d.network}` : ""}
+                    </span>
                   </p>
                   <p className="text-white/55 text-[11px] capitalize mt-0.5">
                     {d.status}
