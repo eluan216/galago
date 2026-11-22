@@ -364,7 +364,7 @@ export default function EsimPage() {
           {t("Find a plan")}
         </h2>
         <p className="text-[var(--mu)] text-[13px] mt-1 mb-4">
-          {t("Prices include the 7% eSIM markup. Your available balance remains in NGN.")}
+          {t("Prices include the 10% eSIM markup. Your available balance remains in NGN.")}
         </p>
         {!purchasesEnabled && !loadingLocations && (
           <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3 text-[13px] text-amber-900">
