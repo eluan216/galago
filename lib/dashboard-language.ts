@@ -61,8 +61,8 @@ const translations: Partial<Record<DashboardLocale, Record<string, string>>> = {
     "Minimum 10 USDT · Network TRC20 only": "Ó kéré tán 10 USDT · Nẹ́tíwọ́ọ̀kì TRC20 nìkan",
     "Funds are held until delivery. You only pay for what lands.":
       "A ó dá owó dúró títí di ìfijiṣẹ́. Owó ohun tí o bá gba nìkan ni o san.",
-    "Prices include the 7% eSIM markup. Your available balance remains in NGN.":
-      "Iye owó ní àfikún eSIM 7%. Ìwọ̀ntúnwọ̀nsì rẹ ṣì wà ní NGN.",
+    "Prices include the 10% eSIM markup. Your available balance remains in NGN.":
+      "Iye owó ní àfikún eSIM 10%. Ìwọ̀ntúnwọ̀nsì rẹ ṣì wà ní NGN.",
     "eSIM purchases are disabled until live provider access and test funding are confirmed. Browsing plans does not debit your wallet.":
       "A ti pa ìrà eSIM títí a ó fi fìdí ààyè olùpèsè gidi àti owó àdánwò múlẹ̀. Wíwo àwọn ètò kò ní gé owó kúrò ní apamọwọ rẹ.",
     "Loading destinations…": "Ń gbé àwọn ibi ìrìnàjò wọlé…",
@@ -123,7 +123,7 @@ const translations: Partial<Record<DashboardLocale, Record<string, string>>> = {
     "Meter number": "Nọ́mbà mítà",
     "Smartcard / decoder number": "Nọ́mbà káàdì / ẹ̀rọ ìṣàfihàn",
     "Number of PINs": "Iye PIN",
-    "Charge · no markup": "Owó ìsanwó · kò sí àfikún",
+    "Charge · VTpass + 10%": "Owó ìsanwó · VTpass + 10%",
     "Pay from wallet": "Sanwó láti apamọwọ",
     "Recent VTpass purchases": "Àwọn ìrà VTpass tuntun",
     "No VTpass purchases yet.": "O kò tíì rà ohunkóhun nípasẹ̀ VTpass.",
@@ -201,8 +201,8 @@ const translations: Partial<Record<DashboardLocale, Record<string, string>>> = {
     "Minimum 10 USDT · Network TRC20 only": "Opekempe 10 USDT · Naanị netwọk TRC20",
     "Funds are held until delivery. You only pay for what lands.":
       "A ga-ejide ego ruo mgbe ebufere ọrụ ahụ. Ị ga-akwụ naanị maka ihe ebufere.",
-    "Prices include the 7% eSIM markup. Your available balance remains in NGN.":
-      "Ọnụahịa gụnyere mgbakwunye eSIM 7%. Ego fọdụrụ gị ka nọ na NGN.",
+    "Prices include the 10% eSIM markup. Your available balance remains in NGN.":
+      "Ọnụahịa gụnyere mgbakwunye eSIM 10%. Ego fọdụrụ gị ka nọ na NGN.",
     "eSIM purchases are disabled until live provider access and test funding are confirmed. Browsing plans does not debit your wallet.":
       "A kwụsịrị ịzụta eSIM ruo mgbe ekwenyere ohere onye na-enye ọrụ na ego nnwale. Ilele atụmatụ anaghị ewepụ ego na akpa gị.",
     "Loading destinations…": "A na-ebunye ebe aga…",
@@ -263,7 +263,7 @@ const translations: Partial<Record<DashboardLocale, Record<string, string>>> = {
     "Meter number": "Nọmba mita",
     "Smartcard / decoder number": "Nọmba smartcard / decoder",
     "Number of PINs": "Ọnụọgụ PIN",
-    "Charge · no markup": "Ego ụgwọ · enweghị mgbakwunye",
+    "Charge · VTpass + 10%": "Ego ụgwọ · VTpass + 10%",
     "Pay from wallet": "Jiri akpa ego kwụọ ụgwọ",
     "Recent VTpass purchases": "Ịzụta VTpass ndị ọhụrụ",
     "No VTpass purchases yet.": "Ịzụta VTpass adịghị.",
@@ -341,8 +341,8 @@ const translations: Partial<Record<DashboardLocale, Record<string, string>>> = {
     "Minimum 10 USDT · Network TRC20 only": "Aƙalla 10 USDT · TRC20 kawai",
     "Funds are held until delivery. You only pay for what lands.":
       "Ana riƙe kuɗi har sai an isar. Kana biyan abin da aka isar kawai.",
-    "Prices include the 7% eSIM markup. Your available balance remains in NGN.":
-      "Farashi ya haɗa da ƙarin 7% na eSIM. Ma'auninka yana nan a NGN.",
+    "Prices include the 10% eSIM markup. Your available balance remains in NGN.":
+      "Farashi ya haɗa da ƙarin 10% na eSIM. Ma'auninka yana nan a NGN.",
     "eSIM purchases are disabled until live provider access and test funding are confirmed. Browsing plans does not debit your wallet.":
       "An kashe sayen eSIM har sai an tabbatar da damar mai bada sabis da kuɗin gwaji. Duba tsare-tsare ba ya cire kuɗi daga walat.",
     "Loading destinations…": "Ana loda wuraren zuwa…",
@@ -403,7 +403,7 @@ const translations: Partial<Record<DashboardLocale, Record<string, string>>> = {
     "Meter number": "Lambar mita",
     "Smartcard / decoder number": "Lambar smartcard / decoder",
     "Number of PINs": "Yawan PIN",
-    "Charge · no markup": "Caji · babu ƙarin kuɗi",
+    "Charge · VTpass + 10%": "Caji · VTpass + 10%",
     "Pay from wallet": "Biya daga walat",
     "Recent VTpass purchases": "Sabbin sayayya na VTpass",
     "No VTpass purchases yet.": "Babu sayayyar VTpass tukuna.",
