@@ -3,9 +3,14 @@
  * Pull Owlet's live service list and upsert it into platforms → services →
  * offers at Owlet's rate + 10%. Throttled to once every 6 hours; safe to call
  * on every visit to the new-order page.
+ *
+ * GET /api/catalog/sync
+ * Ops refresh: runs the same sync only while catalog_sync.refresh_requested_at
+ * is set, then clears it. Use it when nobody is signed in to trigger a sync.
  */
 
 import { NextResponse } from "next/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isOwletEnabled, owletServices } from "@/lib/providers/owlet";
@@ -40,25 +45,15 @@ async function ngnPerUsd() {
   return candidates.length ? Math.max(...candidates) : FALLBACK_NGN_PER_USD;
 }
 
-export async function POST() {
+async function runSync(admin: SupabaseClient, force: boolean) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const admin = createAdminClient();
-
     const { data: lastRun } = await admin
       .from("catalog_sync")
       .select("synced_at, service_count")
       .eq("provider", "owlet")
       .maybeSingle();
 
-    if (lastRun?.synced_at) {
+    if (!force && lastRun?.synced_at) {
       const age = Date.now() - Date.parse(lastRun.synced_at);
       if (Number.isFinite(age) && age >= 0 && age < SYNC_TTL_MS) {
         return NextResponse.json({
@@ -130,6 +125,7 @@ export async function POST() {
         service_count: offers.length,
         fx_rate: fx,
         note: `${plan.platforms.length} platforms, ${plan.services.length} services`,
+        refresh_requested_at: null,
       },
       { onConflict: "provider" }
     );
@@ -145,6 +141,60 @@ export async function POST() {
     });
   } catch (err) {
     console.error("catalog sync:", err);
+    return NextResponse.json(
+      {
+        error: "Catalogue sync failed",
+        detail: err instanceof Error ? err.message : String(err),
+      },
+      { status: 502 }
+    );
+  }
+}
+
+export async function POST() {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    return runSync(createAdminClient(), false);
+  } catch (err) {
+    console.error("catalog sync:", err);
+    return NextResponse.json(
+      {
+        error: "Catalogue sync failed",
+        detail: err instanceof Error ? err.message : String(err),
+      },
+      { status: 502 }
+    );
+  }
+}
+
+/** Ops/cron refresh — only while a refresh has been requested in the database. */
+export async function GET() {
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("catalog_sync")
+      .select("refresh_requested_at")
+      .eq("provider", "owlet")
+      .maybeSingle();
+    if (error) throw error;
+
+    if (!data?.refresh_requested_at) {
+      return NextResponse.json(
+        { error: "No catalogue refresh requested" },
+        { status: 403 }
+      );
+    }
+
+    return runSync(admin, true);
+  } catch (err) {
+    console.error("catalog sync (requested):", err);
     return NextResponse.json(
       {
         error: "Catalogue sync failed",
