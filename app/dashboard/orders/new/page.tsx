@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -13,6 +13,7 @@ type Service = {
   name: string;
   platform_id: string | null;
   category: string | null;
+  action: string | null;
   offerCount: number;
 };
 type Offer = {
@@ -25,6 +26,25 @@ type Offer = {
   service_id: string;
 };
 
+const ACTION_LABELS: Record<string, string> = {
+  followers: "Followers",
+  likes: "Likes",
+  views: "Views",
+  members: "Members",
+  subscribers: "Subscribers",
+  engagement: "Engagement",
+  plays: "Plays",
+  streams: "Streams",
+  comments: "Comments",
+  shares: "Shares",
+  reposts: "Reposts",
+  saves: "Saves",
+  votes: "Votes",
+  traffic: "Traffic",
+  reactions: "Reactions",
+  impressions: "Impressions",
+};
+
 function formatNaira(kobo: number) {
   return new Intl.NumberFormat("en-NG", {
     style: "currency",
@@ -33,9 +53,6 @@ function formatNaira(kobo: number) {
   }).format(kobo / 100);
 }
 
-// Prices are shown in naira per unit (never kobo). Cheap view services cost a
-// fraction of a naira, so keep up to four decimals instead of collapsing them
-// to ₦0.00.
 function formatUnitNaira(kobo: number) {
   return new Intl.NumberFormat("en-NG", {
     style: "currency",
@@ -56,8 +73,10 @@ export default function NewOrderPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [platform, setPlatform] = useState("");
+  const [action, setAction] = useState("");
   const [serviceId, setServiceId] = useState("");
   const [offerId, setOfferId] = useState("");
+  const [offerQuery, setOfferQuery] = useState("");
   const [quantity, setQuantity] = useState(100);
   const [targetLink, setTargetLink] = useState("");
   const [loadingOffers, setLoadingOffers] = useState(false);
@@ -75,23 +94,24 @@ export default function NewOrderPage() {
         .eq("is_active", true)
         .order("sort_order")
         .order("name"),
-      // Count each service's live options so services with nothing to sell can
-      // be dropped instead of showing a dead entry with an empty dropdown.
       supabase
         .from("services")
-        .select("id, name, platform_id, category, offers(count)")
+        .select("id, name, platform_id, category, action, offers(count)")
         .eq("is_active", true)
         .eq("offers.is_active", true)
         .order("name"),
     ]);
     setPlatforms(plats || []);
     setServices(
-      ((svcs as unknown as Array<Service & { offers?: { count: number }[] }>) || [])
+      ((svcs as unknown as Array<
+        Service & { offers?: { count: number }[] }
+      >) || [])
         .map((s) => ({
           id: s.id,
           name: s.name,
           platform_id: s.platform_id,
           category: s.category,
+          action: s.action || "engagement",
           offerCount: s.offers?.[0]?.count ?? 0,
         }))
         .filter((s) => s.offerCount > 0)
@@ -119,8 +139,6 @@ export default function NewOrderPage() {
     load();
   }, [loadCatalogue]);
 
-  // Pull Owlet's live catalogue in the background (server-side, throttled) so
-  // the picker covers every service Owlet sells, not just the seeded rows.
   useEffect(() => {
     let cancelled = false;
     async function refreshCatalogue() {
@@ -156,13 +174,43 @@ export default function NewOrderPage() {
     };
   }, [loadCatalogue, t]);
 
-  const servicesForPlatform = platform
-    ? services.filter((s) => s.platform_id === platform)
-    : services;
+  const servicesForPlatform = useMemo(() => {
+    if (!platform) return [];
+    return services.filter((s) => s.platform_id === platform);
+  }, [platform, services]);
+
+  const actionsForPlatform = useMemo(() => {
+    const set = new Map<string, number>();
+    for (const s of servicesForPlatform) {
+      const a = (s.action || "engagement").toLowerCase();
+      set.set(a, (set.get(a) || 0) + s.offerCount);
+    }
+    return [...set.entries()]
+      .map(([id, count]) => ({
+        id,
+        label: ACTION_LABELS[id] || id.charAt(0).toUpperCase() + id.slice(1),
+        count,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [servicesForPlatform]);
+
+  const servicesForStep = useMemo(() => {
+    if (!platform || !action) return [];
+    return servicesForPlatform.filter(
+      (s) => (s.action || "engagement").toLowerCase() === action
+    );
+  }, [platform, action, servicesForPlatform]);
+
+  const filteredOffers = useMemo(() => {
+    const q = offerQuery.trim().toLowerCase();
+    if (!q) return offers;
+    return offers.filter((o) => o.name.toLowerCase().includes(q));
+  }, [offers, offerQuery]);
 
   async function loadOffers(nextServiceId: string) {
     setOffers([]);
     setOfferId("");
+    setOfferQuery("");
     if (!nextServiceId) return;
     setLoadingOffers(true);
     const supabase = createClient();
@@ -171,13 +219,30 @@ export default function NewOrderPage() {
       .select("id, name, rate_kobo, min_qty, max_qty, quality_tier, service_id")
       .eq("service_id", nextServiceId)
       .eq("is_active", true)
-      .order("rate_kobo");
+      .order("rate_kobo")
+      .limit(200);
     setOffers((data as Offer[]) || []);
     setLoadingOffers(false);
   }
 
+  function resetFromPlatform(next: string) {
+    setPlatform(next);
+    setAction("");
+    setServiceId("");
+    setOfferId("");
+    setOffers([]);
+    setOfferQuery("");
+  }
+
+  function resetFromAction(next: string) {
+    setAction(next);
+    setServiceId("");
+    setOfferId("");
+    setOffers([]);
+    setOfferQuery("");
+  }
+
   const selectedOffer = offers.find((o) => o.id === offerId);
-  // Mirrors hold_order(): the hold is rounded up to a whole kobo.
   const totalKobo = selectedOffer
     ? Math.max(1, Math.ceil(selectedOffer.rate_kobo * quantity))
     : 0;
@@ -185,6 +250,10 @@ export default function NewOrderPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!offerId || !selectedOffer) return;
+    if (!targetLink.trim()) {
+      setError(t("Target link is required"));
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -196,7 +265,7 @@ export default function NewOrderPage() {
         body: JSON.stringify({
           offer_id: offerId,
           quantity,
-          target_link: targetLink || undefined,
+          target_link: targetLink.trim(),
         }),
       });
 
@@ -216,7 +285,7 @@ export default function NewOrderPage() {
   }
 
   return (
-    <div className="max-w-md space-y-6">
+    <div className="max-w-lg space-y-6">
       <div>
         <Link
           href="/dashboard/orders"
@@ -227,8 +296,9 @@ export default function NewOrderPage() {
         <h1 className="text-2xl font-black uppercase tracking-tight text-white mt-2">
           {t("New order")}
         </h1>
-        <p className="text-white/65 text-[13px] mt-1 tabular-nums">
-          {t("Balance")} {balance === null ? "…" : formatNaira(balance)}
+        <p className="text-white/65 text-[13px] mt-1">
+          {t("Social engagements")} · {t("Balance")}{" "}
+          {balance === null ? "…" : formatNaira(balance)}
         </p>
       </div>
 
@@ -242,21 +312,18 @@ export default function NewOrderPage() {
           </div>
         )}
 
+        {/* Step 1 — Platform */}
         <div>
           <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
-            {t("Platform")}
+            1 · {t("Platform")}
           </label>
           <select
             value={platform}
-            onChange={(e) => {
-              setPlatform(e.target.value);
-              setServiceId("");
-              setOfferId("");
-              setOffers([]);
-            }}
+            onChange={(e) => resetFromPlatform(e.target.value)}
+            required
             className={inputClass}
           >
-            <option value="">{t("All platforms")}</option>
+            <option value="">{t("Select a platform")}</option>
             {platforms.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -265,43 +332,99 @@ export default function NewOrderPage() {
           </select>
         </div>
 
-        <div>
-          <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
-            {t("Service")}
-            {servicesForPlatform.length > 0 && (
-              <span className="ml-1.5 font-normal text-[var(--mu)]/70">
-                ({servicesForPlatform.length})
-              </span>
+        {/* Step 2 — Action */}
+        {platform && (
+          <div>
+            <label className="block text-[12px] font-semibold text-[var(--mu)] mb-2">
+              2 · {t("What do you need?")}
+            </label>
+            {actionsForPlatform.length === 0 ? (
+              <p className="text-[13px] text-[var(--mu)]">
+                {t("No services for this platform yet.")}
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {actionsForPlatform.map((a) => {
+                  const active = action === a.id;
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => resetFromAction(a.id)}
+                      className={`px-3.5 py-2 rounded-full text-[13px] font-bold border-2 transition ${
+                        active
+                          ? "bg-[var(--bl)] border-[var(--bl)] text-white"
+                          : "border-[var(--ink)]/15 text-[var(--ink)] hover:border-[var(--bl)]"
+                      }`}
+                    >
+                      {t(a.label)}
+                      <span
+                        className={`ml-1.5 text-[11px] font-semibold ${
+                          active ? "text-white/70" : "text-[var(--mu)]"
+                        }`}
+                      >
+                        {a.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
-          </label>
-          <select
-            value={serviceId}
-            onChange={(e) => {
-              setServiceId(e.target.value);
-              loadOffers(e.target.value);
-            }}
-            required
-            className={inputClass}
-          >
-            <option value="">{t("Select a service")}</option>
-            {servicesForPlatform.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          </div>
+        )}
 
-        {serviceId && (
+        {/* Step 3 — Service category */}
+        {platform && action && (
           <div>
             <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
-              {t("Option")}
-              {offers.length > 0 && (
+              3 · {t("Service")}
+              {servicesForStep.length > 0 && (
                 <span className="ml-1.5 font-normal text-[var(--mu)]/70">
-                  ({offers.length})
+                  ({servicesForStep.length})
                 </span>
               )}
             </label>
+            <select
+              value={serviceId}
+              onChange={(e) => {
+                setServiceId(e.target.value);
+                loadOffers(e.target.value);
+              }}
+              required
+              className={inputClass}
+            >
+              <option value="">{t("Select a service")}</option>
+              {servicesForStep.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                  {s.offerCount > 1 ? ` · ${s.offerCount}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Step 4 — Offer search + select */}
+        {serviceId && (
+          <div className="space-y-2">
+            <label className="block text-[12px] font-semibold text-[var(--mu)]">
+              4 · {t("Option")}
+              {offers.length > 0 && (
+                <span className="ml-1.5 font-normal text-[var(--mu)]/70">
+                  ({offers.length}
+                  {offers.length >= 200 ? "+" : ""})
+                </span>
+              )}
+            </label>
+            {offers.length > 6 && (
+              <input
+                type="search"
+                value={offerQuery}
+                onChange={(e) => setOfferQuery(e.target.value)}
+                placeholder={t("Search options…")}
+                className={inputClass}
+              />
+            )}
             <select
               value={offerId}
               onChange={(e) => {
@@ -316,20 +439,25 @@ export default function NewOrderPage() {
               <option value="">
                 {loadingOffers ? t("Loading…") : t("Select an option")}
               </option>
-              {offers.map((o) => (
+              {filteredOffers.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name} · {formatUnitNaira(o.rate_kobo)} {t("per unit")}
                 </option>
               ))}
             </select>
             {!loadingOffers && offers.length === 0 && (
-              <p className="text-[11px] text-[var(--mu)] mt-1.5">
+              <p className="text-[11px] text-[var(--mu)]">
                 {t("No options for this service yet.")}
               </p>
             )}
+            {!loadingOffers && offers.length > 0 && filteredOffers.length === 0 && (
+              <p className="text-[11px] text-[var(--mu)]">
+                {t("No options match your search.")}
+              </p>
+            )}
             {!loadingOffers && offers.length > 0 && (
-              <p className="text-[11px] text-[var(--mu)] mt-1.5">
-                {t("Prices are in naira per unit — Owlet's rate plus 10%.")}
+              <p className="text-[11px] text-[var(--mu)]">
+                {t("Prices are in naira per unit — provider rate plus margin.")}
               </p>
             )}
           </div>
@@ -361,6 +489,7 @@ export default function NewOrderPage() {
                 value={targetLink}
                 onChange={(e) => setTargetLink(e.target.value)}
                 placeholder="https://…"
+                required
                 className={inputClass}
               />
             </div>

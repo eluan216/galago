@@ -90,8 +90,8 @@ export default async function DashboardPage() {
     {
       href: "/dashboard/orders",
       kicker: "Orders",
-      title: "Campaigns",
-      body: "Track deliveries",
+      title: "Social engagements",
+      body: "Followers, likes, views & more",
       icon: "orders",
       accent: "#e0660b",
     },
@@ -284,7 +284,6 @@ function ServiceIcon({ name }: { name: string }) {
   return (
     <div className="svc-icon">
       <svg viewBox="0 0 24 24" className={common} aria-hidden>
-        {/* Airtime & bills — phone with a top-up signal */}
         {name === "phone" && (
           <>
             <rect x="6.5" y="2.5" width="11" height="19" rx="2.6" />
@@ -292,7 +291,6 @@ function ServiceIcon({ name }: { name: string }) {
             <path d="M14.4 10.6a2.6 2.6 0 010 3.6M16.8 8.6a5.6 5.6 0 010 7.6" />
           </>
         )}
-        {/* eSIM — SIM card with cut corner and contact pad */}
         {name === "esim" && (
           <>
             <path d="M4 8.2 8.2 4H17a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" />
@@ -301,7 +299,6 @@ function ServiceIcon({ name }: { name: string }) {
             <path d="M10 15.5h7M13.5 13v5" />
           </>
         )}
-        {/* Wallet — naira purse with coin slot */}
         {name === "wallet" && (
           <>
             <path d="M3.5 8.2A2.2 2.2 0 0 1 5.7 6h11.6a2 2 0 0 1 2 2v.4" />
@@ -310,7 +307,6 @@ function ServiceIcon({ name }: { name: string }) {
             <circle cx="17.4" cy="13.6" r="0.6" fill="currentColor" stroke="none" />
           </>
         )}
-        {/* Campaigns — delivery parcel */}
         {name === "orders" && (
           <>
             <path d="M20.5 7.9 12 3.2 3.5 7.9v8.2L12 20.8l8.5-4.7z" />
@@ -318,7 +314,6 @@ function ServiceIcon({ name }: { name: string }) {
             <path d="M7.8 5.6 16.2 10" />
           </>
         )}
-        {/* Telegram — paper plane */}
         {name === "telegram" && (
           <>
             <path d="M21.4 3.1 2.9 10.2a.6.6 0 0 0-.05 1.1l4.9 2.4 1.9 5.9a.6.6 0 0 0 1 .22l2.7-2.6 4.6 3.4a.7.7 0 0 0 1.1-.4l2.6-16.4a.6.6 0 0 0-.75-.68z" />
