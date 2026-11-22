@@ -10,6 +10,7 @@ import {
   queryProfiles,
 } from "@/lib/esimaccess";
 import { providerPriceToNgnKobo } from "@/lib/esim-pricing";
+import { PROVIDER_MARKUP_PERCENT } from "@/lib/markups";
 import { isOrderOutcomeUnknown, isProfileReady } from "@/lib/esim-lifecycle";
 import { getUsdRates } from "@/lib/fx-rates";
 
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
         p_provider_currency: selectedPackage.currencyCode,
         p_fx_rate_ngn_per_unit:
           rates.usdRates.NGN / rates.usdRates[selectedPackage.currencyCode],
-        p_markup_percent: 7,
+        p_markup_percent: PROVIDER_MARKUP_PERCENT,
         p_charge_kobo: chargeKobo,
       }
     );

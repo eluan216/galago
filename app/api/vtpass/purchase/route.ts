@@ -14,6 +14,7 @@ import {
   VtpassError,
   type VtpassResponse,
 } from "@/lib/vtpass";
+import { withMarkupKobo } from "@/lib/markups";
 
 export const runtime = "nodejs";
 
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     let variationName = "";
-    let amountKobo: number | null = null;
+    let costKobo: number | null = null;
     const payload: Record<string, unknown> = {
       request_id: createVtpassRequestId(),
       serviceID: serviceId,
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      amountKobo = providedAmount;
+      costKobo = providedAmount;
       payload.amount = amountNgn;
 
       if (category === "electricity-bill") {
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
       if (!unitKobo) {
         return NextResponse.json({ error: "VTpass returned an invalid plan price" }, { status: 502 });
       }
-      amountKobo = unitKobo * quantity;
+      costKobo = unitKobo * quantity;
       variationName = variation.name;
       payload.variation_code = variationCode;
       payload.amount = unitKobo / 100;
@@ -187,7 +188,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!amountKobo || !Number.isSafeInteger(amountKobo)) {
+    if (!costKobo || !Number.isSafeInteger(costKobo)) {
+      return NextResponse.json({ error: "Invalid purchase amount" }, { status: 400 });
+    }
+
+    // Galago charges VTpass's cost + 10%; VTpass itself is paid the cost only.
+    const chargeKobo = withMarkupKobo(costKobo);
+    if (!chargeKobo) {
       return NextResponse.json({ error: "Invalid purchase amount" }, { status: 400 });
     }
 
@@ -206,7 +213,7 @@ export async function POST(request: NextRequest) {
         p_product_name: variationName || product.name,
         p_customer_reference: customerReference || phone,
         p_phone: phone,
-        p_amount_kobo: amountKobo,
+        p_amount_kobo: chargeKobo,
       }
     );
     if (startError) {
@@ -249,7 +256,7 @@ export async function POST(request: NextRequest) {
           transaction_id: start.transaction_id,
           request_id: providerRequestId,
           status: "pending",
-          amount_kobo: amountKobo,
+          amount_kobo: chargeKobo,
           message: "Purchase submitted; delivery is not confirmed yet. Check status before trying again.",
         },
         { status: 202 }
@@ -273,7 +280,7 @@ export async function POST(request: NextRequest) {
           transaction_id: start.transaction_id,
           request_id: providerRequestId,
           status: "pending",
-          amount_kobo: amountKobo,
+          amount_kobo: chargeKobo,
           message: "VTpass returned a result, but Galago could not record it. Check status before retrying.",
         },
         { status: 202 }
@@ -285,7 +292,7 @@ export async function POST(request: NextRequest) {
         transaction_id: start.transaction_id,
         request_id: providerRequestId,
         status: (resolved as Record<string, unknown>).status || status,
-        amount_kobo: amountKobo,
+        amount_kobo: chargeKobo,
         purchased_code: (resolved as Record<string, unknown>).purchased_code || null,
         message: providerResponse.response_description || null,
       },
