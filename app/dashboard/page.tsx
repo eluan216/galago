@@ -12,11 +12,13 @@ function formatNaira(kobo: number) {
   }).format(kobo / 100);
 }
 
-function greetingFor(name: string) {
+function greetingFor() {
   const hour = new Date().getHours();
-  const hello =
-    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  return `${hello}, ${name}`;
+  return hour < 12
+    ? "Good morning"
+    : hour < 17
+      ? "Good afternoon"
+      : "Good evening";
 }
 
 function firstName(full: string | null | undefined, email?: string | null) {
@@ -52,10 +54,7 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(5);
 
-  const name = firstName(
-    profile?.full_name,
-    profile?.email || user?.email
-  );
+  const name = firstName(profile?.full_name, profile?.email || user?.email);
   const displayName =
     profile?.full_name?.trim() ||
     profile?.email ||
@@ -70,6 +69,7 @@ export default async function DashboardPage() {
       title: "Airtime & bills",
       body: "Top up or pay utilities",
       icon: "phone",
+      accent: "#2a1bf7",
     },
     {
       href: "/dashboard/esim",
@@ -77,6 +77,7 @@ export default async function DashboardPage() {
       title: "eSIM data plans",
       body: "Browse plans and manage activations",
       icon: "esim",
+      accent: "#7c3aed",
     },
     {
       href: "/dashboard/wallet",
@@ -84,6 +85,7 @@ export default async function DashboardPage() {
       title: "Naira & USDT",
       body: "Fund and track ledger",
       icon: "wallet",
+      accent: "#0d9488",
     },
     {
       href: "/dashboard/orders",
@@ -91,6 +93,7 @@ export default async function DashboardPage() {
       title: "Campaigns",
       body: "Track deliveries",
       icon: "orders",
+      accent: "#e0660b",
     },
     {
       href: "/dashboard/telegram",
@@ -98,16 +101,20 @@ export default async function DashboardPage() {
       title: "Telegram",
       body: "Galago on Telegram",
       icon: "telegram",
+      accent: "#0284c7",
     },
   ] as const;
 
   return (
     <div className="dash-overview space-y-5 sm:space-y-6 pb-4">
       <div className="text-white">
-        <h1 className="text-[clamp(28px,5vw,40px)] font-extrabold tracking-tight leading-tight">
-          {greetingFor(name)}
+        <h1 className="font-display text-[clamp(31px,5.2vw,46px)] font-bold leading-[1.04]">
+          {t(greetingFor())},{" "}
+          <span className="greeting-name">{name}</span>
         </h1>
-        <p className="mt-1 text-white/80 text-[15px]">{t("Your Galago snapshot")}</p>
+        <p className="mt-2 text-white/75 text-[15px]">
+          {t("Your Galago snapshot")}
+        </p>
       </div>
 
       <div className="dash-grid">
@@ -129,82 +136,75 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <section
-          className="dash-svc-col bg-white text-[var(--ink)] rounded-[24px] p-5 sm:p-6 shadow-[0_16px_40px_rgba(8,4,80,0.25)]"
-          aria-labelledby="services-heading"
-        >
-          <h2
-            id="services-heading"
-            className="text-[18px] font-bold tracking-tight m-0 mb-4"
-          >
-            {t("Services")}
-          </h2>
+        <section className="dash-svc-col dash-panel" aria-labelledby="services-heading">
+          <div className="dash-panel-head">
+            <div>
+              <p className="dash-eyebrow">{t("Everything Galago")}</p>
+              <h2 id="services-heading" className="dash-panel-title">
+                {t("Services")}
+              </h2>
+            </div>
+            <span className="dash-count">{services.length} live</span>
+          </div>
           <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-3">
             {services.map((s) => (
               <Link
                 key={s.href}
                 href={s.href}
-                className="flex gap-3.5 items-start p-4 border-[1.5px] border-[#e4e6f2] rounded-[18px] hover:border-[var(--bl)] hover:bg-[#f7f8ff] transition"
+                className="svc-tile group"
+                style={{ ["--svc" as string]: s.accent }}
               >
                 <ServiceIcon name={s.icon} />
-                <div>
-                  <small className="block text-[11px] font-bold tracking-wide uppercase text-[var(--bl)]">
-                    {t(s.kicker)}
-                  </small>
-                  <b className="block text-[16px] leading-snug mt-0.5">
-                    {t(s.title)}
-                  </b>
-                  <span className="block text-[14px] text-[var(--mu)] leading-snug mt-0.5">
-                    {t(s.body)}
-                  </span>
+                <div className="min-w-0">
+                  <small className="svc-kicker">{t(s.kicker)}</small>
+                  <b className="svc-title">{t(s.title)}</b>
+                  <span className="svc-body">{t(s.body)}</span>
                 </div>
-              </Link>
-            ))}
-            <div
-              className="flex gap-3.5 items-start p-4 border-[1.5px] border-dashed border-[#e4e6f2] rounded-[18px] bg-[#f6f7fb] opacity-80"
-              aria-disabled
-            >
-              <div className="shrink-0 w-11 h-11 rounded-xl bg-[#e9eaf2] grid place-items-center">
                 <svg
+                  className="svc-arrow"
                   viewBox="0 0 24 24"
-                  className="w-6 h-6"
                   fill="none"
-                  stroke="#5a5780"
-                  strokeWidth="2"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  aria-hidden
                 >
-                  <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 5l-3 14" />
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </Link>
+            ))}
+            <div className="svc-tile svc-tile-ghost" aria-disabled>
+              <div className="svc-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-[25px] h-[25px] fill-none stroke-current [stroke-width:1.7] [stroke-linecap:round] [stroke-linejoin:round]"
+                  aria-hidden
+                >
+                  <path d="m8.5 8-4.2 4 4.2 4M15.5 8l4.2 4-4.2 4M13.6 4.5l-3.2 15" />
                 </svg>
               </div>
               <div>
-                <small className="block text-[11px] font-bold tracking-wide uppercase text-[var(--mu)]">
-                  {t("Reseller")}
-                </small>
-                <b className="block text-[16px] text-[#6c6a8a]">{t("API soon")}</b>
-                <span className="block text-[14px] text-[#6c6a8a]">
-                  {t("Coming next")}
-                </span>
+                <small className="svc-kicker">{t("Reseller")}</small>
+                <b className="svc-title">{t("API soon")}</b>
+                <span className="svc-body">{t("Coming next")}</span>
               </div>
             </div>
           </div>
         </section>
 
         <section
-          className="dash-ord-col bg-white text-[var(--ink)] rounded-[24px] p-5 sm:p-6 shadow-[0_16px_40px_rgba(8,4,80,0.25)]"
+          className="dash-ord-col dash-panel"
           aria-labelledby="orders-heading"
         >
-          <div className="flex justify-between items-baseline mb-4">
-            <h2
-              id="orders-heading"
-              className="text-[18px] font-bold tracking-tight m-0"
-            >
-              {t("Recent orders")}
-            </h2>
-            <Link
-              href="/dashboard/orders"
-              className="text-[var(--bl)] font-semibold text-[14px]"
-            >
+          <div className="dash-panel-head">
+            <div>
+              <p className="dash-eyebrow">{t("Activity")}</p>
+              <h2 id="orders-heading" className="dash-panel-title">
+                {t("Recent orders")}
+              </h2>
+            </div>
+            <Link href="/dashboard/orders" className="dash-link">
               {t("View all")}
             </Link>
           </div>
@@ -230,7 +230,7 @@ export default async function DashboardPage() {
                 </thead>
                 <tbody>
                   {recentOrders.map((o) => (
-                    <tr key={o.id} className="border-b border-[#e4e6f2]/40 last:border-0">
+                    <tr key={o.id} className="dash-row">
                       <td className="py-3.5 pr-2 font-mono text-[13px]">
                         {o.id.slice(0, 8)}…
                       </td>
@@ -280,39 +280,49 @@ export default async function DashboardPage() {
 
 function ServiceIcon({ name }: { name: string }) {
   const common =
-    "w-6 h-6 fill-none stroke-[var(--bl)] stroke-2 [stroke-linecap:round] [stroke-linejoin:round]";
+    "w-[25px] h-[25px] fill-none stroke-current [stroke-width:1.7] [stroke-linecap:round] [stroke-linejoin:round]";
   return (
-    <div className="shrink-0 w-11 h-11 rounded-xl bg-[#eef0ff] grid place-items-center">
-      <svg viewBox="0 0 24 24" className={common}>
+    <div className="svc-icon">
+      <svg viewBox="0 0 24 24" className={common} aria-hidden>
+        {/* Airtime & bills — phone with a top-up signal */}
         {name === "phone" && (
           <>
-            <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
-            <path d="M11 18.5h2M10 7h4M10 10.5h4" />
+            <rect x="6.5" y="2.5" width="11" height="19" rx="2.6" />
+            <path d="M10.5 5.5h3M10.8 18.5h2.4" />
+            <path d="M14.4 10.6a2.6 2.6 0 010 3.6M16.8 8.6a5.6 5.6 0 010 7.6" />
           </>
         )}
+        {/* eSIM — SIM card with cut corner and contact pad */}
         {name === "esim" && (
           <>
-            <path d="M6 3h8l5 5v13H6z" />
-            <rect x="9" y="12" width="7" height="6" rx="1.2" />
-            <path d="M9 15h7M12.5 12v6" />
+            <path d="M4 8.2 8.2 4H17a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" />
+            <path d="M4 9h4.2V4.6" />
+            <rect x="10" y="13" width="7" height="5" rx="1" />
+            <path d="M10 15.5h7M13.5 13v5" />
           </>
         )}
+        {/* Wallet — naira purse with coin slot */}
         {name === "wallet" && (
           <>
-            <path d="M4 7.5A2.5 2.5 0 016.5 5H19v14H6.5A2.5 2.5 0 014 16.5z" />
-            <path d="M19 9h-4a2 2 0 000 4h4" />
+            <path d="M3.5 8.2A2.2 2.2 0 0 1 5.7 6h11.6a2 2 0 0 1 2 2v.4" />
+            <path d="M3.5 8.2v8.6A2.7 2.7 0 0 0 6.2 19.5h11.6a2.7 2.7 0 0 0 2.7-2.7V8.8a2 2 0 0 0-2-2H5.7" />
+            <path d="M20.5 11.4h-3.3a2.2 2.2 0 0 0 0 4.4h3.3" />
+            <circle cx="17.4" cy="13.6" r="0.6" fill="currentColor" stroke="none" />
           </>
         )}
+        {/* Campaigns — delivery parcel */}
         {name === "orders" && (
           <>
-            <path d="M3 11v3l12 5V6z" />
-            <path d="M15 9.5a3 3 0 010 6M6 14.5l1.2 5" />
+            <path d="M20.5 7.9 12 3.2 3.5 7.9v8.2L12 20.8l8.5-4.7z" />
+            <path d="M3.7 8.1 12 12.7l8.3-4.6M12 12.7v8" />
+            <path d="M7.8 5.6 16.2 10" />
           </>
         )}
+        {/* Telegram — paper plane */}
         {name === "telegram" && (
           <>
-            <path d="M21 4L3 11l6 2.5L11 20l3-4.5 5 3.5z" />
-            <path d="M9 13.5L21 4" />
+            <path d="M21.4 3.1 2.9 10.2a.6.6 0 0 0-.05 1.1l4.9 2.4 1.9 5.9a.6.6 0 0 0 1 .22l2.7-2.6 4.6 3.4a.7.7 0 0 0 1.1-.4l2.6-16.4a.6.6 0 0 0-.75-.68z" />
+            <path d="M7.75 13.7 21.4 3.1 10.4 16.9" />
           </>
         )}
       </svg>
