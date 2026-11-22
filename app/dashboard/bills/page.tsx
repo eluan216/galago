@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PROVIDER_MARKUP } from "@/lib/markups";
 import { useDashboardLanguage } from "@/components/DashboardLanguageProvider";
 import { translate } from "@/lib/dashboard-language";
 
@@ -92,6 +93,11 @@ export default function BillsPage() {
     }
     return Math.round(Number(amount) * 100) || 0;
   }, [amount, quantity, selectedVariation, usesVariation]);
+  // VTpass is paid the cost above; the customer pays cost + 10%.
+  const chargeKobo = useMemo(
+    () => (amountKobo > 0 ? Math.ceil(amountKobo * PROVIDER_MARKUP) : 0),
+    [amountKobo]
+  );
 
   useEffect(() => {
     let active = true;
@@ -570,10 +576,10 @@ export default function BillsPage() {
         {selectedProduct && (
           <div className="bg-[var(--of)] border-2 border-[var(--ink)]/10 rounded-xl px-4 py-3 flex justify-between items-center">
             <span className="text-[var(--mu)] text-[13px] font-semibold">
-              {t("Charge · no markup")}
+              {t("Charge · VTpass + 10%")}
             </span>
             <span className="text-lg font-black tabular-nums">
-              {amountKobo > 0 ? formatNaira(amountKobo) : "—"}
+              {chargeKobo > 0 ? formatNaira(chargeKobo) : "—"}
             </span>
           </div>
         )}
