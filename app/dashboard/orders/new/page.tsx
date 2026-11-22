@@ -13,6 +13,7 @@ type Service = {
   name: string;
   platform_id: string | null;
   category: string | null;
+  offerCount: number;
 };
 type Offer = {
   id: string;
@@ -74,14 +75,27 @@ export default function NewOrderPage() {
         .eq("is_active", true)
         .order("sort_order")
         .order("name"),
+      // Count each service's live options so services with nothing to sell can
+      // be dropped instead of showing a dead entry with an empty dropdown.
       supabase
         .from("services")
-        .select("id, name, platform_id, category")
+        .select("id, name, platform_id, category, offers(count)")
         .eq("is_active", true)
+        .eq("offers.is_active", true)
         .order("name"),
     ]);
     setPlatforms(plats || []);
-    setServices(svcs || []);
+    setServices(
+      ((svcs as unknown as Array<Service & { offers?: { count: number }[] }>) || [])
+        .map((s) => ({
+          id: s.id,
+          name: s.name,
+          platform_id: s.platform_id,
+          category: s.category,
+          offerCount: s.offers?.[0]?.count ?? 0,
+        }))
+        .filter((s) => s.offerCount > 0)
+    );
   }, []);
 
   useEffect(() => {
