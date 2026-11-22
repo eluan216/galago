@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -8,15 +8,20 @@ import { useDashboardLanguage } from "@/components/DashboardLanguageProvider";
 import { translate } from "@/lib/dashboard-language";
 
 type Platform = { id: string; name: string };
+type Service = {
+  id: string;
+  name: string;
+  platform_id: string | null;
+  category: string | null;
+};
 type Offer = {
   id: string;
   name: string;
   rate_kobo: number;
   min_qty: number;
   max_qty: number;
-  quality_tier: string;
+  quality_tier: string | null;
   service_id: string;
-  services: { name: string; platform_id: string; action: string } | null;
 };
 
 function formatNaira(kobo: number) {
@@ -27,8 +32,9 @@ function formatNaira(kobo: number) {
   }).format(kobo / 100);
 }
 
-// Per-unit rates can be a fraction of a kobo (cheap view services), so show up
-// to four decimals instead of collapsing them to ₦0.00.
+// Prices are shown in naira per unit (never kobo). Cheap view services cost a
+// fraction of a naira, so keep up to four decimals instead of collapsing them
+// to ₦0.00.
 function formatUnitNaira(kobo: number) {
   return new Intl.NumberFormat("en-NG", {
     style: "currency",
@@ -43,56 +49,118 @@ const inputClass =
 
 export default function NewOrderPage() {
   const locale = useDashboardLanguage();
-  const t = (source: string) => translate(locale, source);
+  const t = useCallback((source: string) => translate(locale, source), [locale]);
   const router = useRouter();
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [platform, setPlatform] = useState("");
+  const [serviceId, setServiceId] = useState("");
   const [offerId, setOfferId] = useState("");
   const [quantity, setQuantity] = useState(100);
   const [targetLink, setTargetLink] = useState("");
+  const [loadingOffers, setLoadingOffers] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  useEffect(() => {
-    load();
+  const loadCatalogue = useCallback(async () => {
+    const supabase = createClient();
+    const [{ data: plats }, { data: svcs }] = await Promise.all([
+      supabase
+        .from("platforms")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("sort_order")
+        .order("name"),
+      supabase
+        .from("services")
+        .select("id, name, platform_id, category")
+        .eq("is_active", true)
+        .order("name"),
+    ]);
+    setPlatforms(plats || []);
+    setServices(svcs || []);
   }, []);
 
-  async function load() {
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  useEffect(() => {
+    async function load() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (user) {
-      const { data: wallet } = await supabase
-        .from("wallets")
-        .select("balance_kobo")
-        .eq("user_id", user.id)
-        .single();
-      setBalance(wallet?.balance_kobo ?? 0);
+      if (user) {
+        const { data: wallet } = await supabase
+          .from("wallets")
+          .select("balance_kobo")
+          .eq("user_id", user.id)
+          .single();
+        setBalance(wallet?.balance_kobo ?? 0);
+      }
+
+      await loadCatalogue();
     }
+    load();
+  }, [loadCatalogue]);
 
-    const { data: plats } = await supabase
-      .from("platforms")
-      .select("id, name")
-      .eq("is_active", true)
-      .order("sort_order");
-    setPlatforms(plats || []);
+  // Pull Owlet's live catalogue in the background (server-side, throttled) so
+  // the picker covers every service Owlet sells, not just the seeded rows.
+  useEffect(() => {
+    let cancelled = false;
+    async function refreshCatalogue() {
+      try {
+        const res = await fetch("/api/catalog/sync", { method: "POST" });
+        const data = await res.json();
+        if (cancelled) return;
+        if (!res.ok) {
+          setNotice(
+            data.error ||
+              t("Live catalogue unavailable — showing saved services.")
+          );
+          return;
+        }
+        if (!data.skipped && data.offers) {
+          await loadCatalogue();
+          if (cancelled) return;
+          setNotice(
+            `${t("Catalogue updated")} · ${data.offers.toLocaleString()} ${t(
+              "services"
+            )}`
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setNotice(t("Live catalogue unavailable — showing saved services."));
+        }
+      }
+    }
+    refreshCatalogue();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadCatalogue, t]);
 
-    const { data: offs } = await supabase
+  const servicesForPlatform = platform
+    ? services.filter((s) => s.platform_id === platform)
+    : services;
+
+  async function loadOffers(nextServiceId: string) {
+    setOffers([]);
+    setOfferId("");
+    if (!nextServiceId) return;
+    setLoadingOffers(true);
+    const supabase = createClient();
+    const { data } = await supabase
       .from("offers")
-      .select(
-        "id, name, rate_kobo, min_qty, max_qty, quality_tier, service_id, services(name, platform_id, action)"
-      )
-      .eq("is_active", true);
-    setOffers((offs as any) || []);
+      .select("id, name, rate_kobo, min_qty, max_qty, quality_tier, service_id")
+      .eq("service_id", nextServiceId)
+      .eq("is_active", true)
+      .order("rate_kobo");
+    setOffers((data as Offer[]) || []);
+    setLoadingOffers(false);
   }
-
-  const filteredOffers = platform
-    ? offers.filter((o) => o.services?.platform_id === platform)
-    : offers;
 
   const selectedOffer = offers.find((o) => o.id === offerId);
   // Mirrors hold_order(): the hold is rounded up to a whole kobo.
@@ -168,7 +236,9 @@ export default function NewOrderPage() {
             value={platform}
             onChange={(e) => {
               setPlatform(e.target.value);
+              setServiceId("");
               setOfferId("");
+              setOffers([]);
             }}
             className={inputClass}
           >
@@ -184,25 +254,72 @@ export default function NewOrderPage() {
         <div>
           <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
             {t("Service")}
+            {servicesForPlatform.length > 0 && (
+              <span className="ml-1.5 font-normal text-[var(--mu)]/70">
+                ({servicesForPlatform.length})
+              </span>
+            )}
           </label>
           <select
-            value={offerId}
+            value={serviceId}
             onChange={(e) => {
-              setOfferId(e.target.value);
-              const o = offers.find((x) => x.id === e.target.value);
-              if (o) setQuantity(o.min_qty);
+              setServiceId(e.target.value);
+              loadOffers(e.target.value);
             }}
             required
             className={inputClass}
           >
             <option value="">{t("Select a service")}</option>
-            {filteredOffers.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name} · {formatUnitNaira(o.rate_kobo)}/unit
+            {servicesForPlatform.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
               </option>
             ))}
           </select>
         </div>
+
+        {serviceId && (
+          <div>
+            <label className="block text-[12px] font-semibold text-[var(--mu)] mb-1.5">
+              {t("Option")}
+              {offers.length > 0 && (
+                <span className="ml-1.5 font-normal text-[var(--mu)]/70">
+                  ({offers.length})
+                </span>
+              )}
+            </label>
+            <select
+              value={offerId}
+              onChange={(e) => {
+                setOfferId(e.target.value);
+                const o = offers.find((x) => x.id === e.target.value);
+                if (o) setQuantity(o.min_qty);
+              }}
+              required
+              className={inputClass}
+              disabled={loadingOffers}
+            >
+              <option value="">
+                {loadingOffers ? t("Loading…") : t("Select an option")}
+              </option>
+              {offers.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name} · {formatUnitNaira(o.rate_kobo)} {t("per unit")}
+                </option>
+              ))}
+            </select>
+            {!loadingOffers && offers.length === 0 && (
+              <p className="text-[11px] text-[var(--mu)] mt-1.5">
+                {t("No options for this service yet.")}
+              </p>
+            )}
+            {!loadingOffers && offers.length > 0 && (
+              <p className="text-[11px] text-[var(--mu)] mt-1.5">
+                {t("Prices are in naira per unit — Owlet's rate plus 10%.")}
+              </p>
+            )}
+          </div>
+        )}
 
         {selectedOffer && (
           <>
@@ -256,6 +373,10 @@ export default function NewOrderPage() {
         <p className="text-[var(--mu)] text-[11px] text-center leading-relaxed">
           {t("Funds are held until delivery. You only pay for what lands.")}
         </p>
+
+        {notice && (
+          <p className="text-[var(--mu)] text-[11px] text-center">{notice}</p>
+        )}
       </form>
     </div>
   );
