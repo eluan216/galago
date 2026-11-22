@@ -45,6 +45,7 @@ export function GalagoCard({
 
   return (
     <div className="galago-card relative aspect-[1.62/1] rounded-[28px] overflow-hidden shadow-[0_24px_50px_rgba(8,4,80,0.45)]">
+      <div className="galago-sheen" aria-hidden />
       <div className="absolute -right-[8%] -top-[30%] w-[62%] aspect-square rounded-full bg-[var(--li)]" />
       <div
         className="absolute right-0 bottom-0 w-[48%] h-[58%] bg-[var(--ink)]"
@@ -67,7 +68,7 @@ export function GalagoCard({
             Available balance
           </small>
           <output
-            className="block text-[clamp(30px,8.4vw,42px)] font-extrabold tracking-tight leading-tight my-0.5 tabular-nums"
+            className="font-display block text-[clamp(30px,8.4vw,42px)] font-bold leading-[1.05] my-1 tabular-nums"
             aria-live="polite"
           >
             {hidden ? "₦•••••" : formatNaira(shown)}

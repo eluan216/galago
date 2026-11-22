@@ -51,10 +51,15 @@ export default async function DashboardLayout({
           <div className="max-w-[1080px] mx-auto flex items-center gap-3">
             <Link
               href="/dashboard"
-              className="flex items-center gap-2 shrink-0 hover:opacity-90 font-extrabold text-[20px] tracking-tight text-white"
+              className="brand-lockup group shrink-0"
+              aria-label="Galago dashboard"
             >
-              <GalagoMark className="w-10 h-10" />
-              <span className="hidden sm:inline">Galago</span>
+              <span className="brand-mark">
+                <GalagoMark className="w-[26px] h-[26px]" />
+              </span>
+              <span className="brand-word hidden sm:inline font-display">
+                Galago
+              </span>
             </Link>
 
             <nav
