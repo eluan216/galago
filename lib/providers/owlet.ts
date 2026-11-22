@@ -124,17 +124,17 @@ export async function owletOrderStatus(
 
 /** Map Owlet status string → Galago action */
 export function mapOwletStatus(status: string | undefined): {
-  action: "settle" | "release" | "processing" | "unknown";
+  action: "settle" | "settle_partial" | "release" | "processing" | "unknown";
   raw: string;
 } {
   const s = (status || "").toLowerCase().trim();
   if (!s) return { action: "unknown", raw: status || "" };
-  if (
-    s === "completed" ||
-    s === "complete" ||
-    s === "success" ||
-    s === "partial"
-  ) {
+  // Owlet only charged the delivered part and refunded the rest to its own
+  // wallet, so a partial order must not be settled at the full hold.
+  if (s === "partial") {
+    return { action: "settle_partial", raw: status || s };
+  }
+  if (s === "completed" || s === "complete" || s === "success") {
     return { action: "settle", raw: status || s };
   }
   if (
