@@ -77,20 +77,32 @@ const SERVICE_KINDS: Array<[string, string, string]> = [
   ["comment like", "💬", "Comment likes"],
   ["comment", "💬", "Comments"],
   ["dislike", "👎", "Dislikes"],
+  ["chat bot", "💬", "Chat bots"],
+  ["bot start", "🤖", "Bot starts"],
+  ["space listener", "🎧", "Space listeners"],
+  ["listener", "🎧", "Listeners"],
+  ["post read", "👀", "Post reads"],
+  ["pk battle", "⚔️", "Live PK battles"],
   ["like", "❤️", "Likes"],
   ["follower", "👥", "Followers"],
+  ["follow", "👥", "Followers"],
   ["subscriber", "🔔", "Subscribers"],
+  ["subscribe", "🔔", "Subscribers"],
   ["member", "👥", "Members"],
+  ["connect", "👥", "Connections"],
   ["view", "👀", "Views"],
   ["watch hour", "⏱️", "Watch hours"],
   ["play", "▶️", "Plays"],
   ["stream", "🎧", "Streams"],
+  ["sharing", "🔁", "Shares"],
   ["share", "🔁", "Shares"],
   ["repost", "🔁", "Reposts"],
   ["retweet", "🔁", "Reposts"],
+  ["react", "👍", "Reactions"],
   ["save", "🔖", "Saves"],
   ["vote", "🗳️", "Votes"],
-  ["reaction", "👍", "Reactions"],
+  ["poll", "🗳️", "Votes"],
+  ["boost", "🚀", "Boosts"],
   ["impression", "📈", "Impressions"],
   ["traffic", "🌐", "Traffic"],
   ["visit", "🌐", "Visits"],
@@ -98,7 +110,9 @@ const SERVICE_KINDS: Array<[string, string, string]> = [
   ["review", "⭐", "Reviews"],
   ["rating", "⭐", "Ratings"],
   ["mention", "📣", "Mentions"],
+  ["invite", "📨", "Invites"],
   ["click", "👆", "Clicks"],
+  ["story", "📖", "Stories"],
 ];
 
 function serviceKind(text: string) {
@@ -113,9 +127,8 @@ function escapeRegExp(text: string) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Turn an Owlet service name into a short "what you get" label, e.g.
- *  "TikTok Comments [Default]" → "💬 Comments". */
-export function offerLabel(
+/** Drops the type label and the platform word so only the "what" is left. */
+function stripOwletName(
   owletName: string,
   platformName: string,
   typeLabel: string
@@ -128,15 +141,35 @@ export function offerLabel(
     if (word.length < 3) continue;
     cleaned = cleaned.replace(new RegExp(`\\b${escapeRegExp(word)}\\b`, "gi"), " ");
   }
-  cleaned = cleaned
+  return cleaned
     .replace(/[·|/]+/g, " ")
     .replace(/\(\s*\)|\[\s*\]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
 
-  const kind = serviceKind(cleaned) ?? serviceKind(owletName);
-  const text = kind ? kind.label : cleaned || owletName;
-  return kind ? `${kind.emoji} ${text}` : `⚡ ${text}`;
+/** Turn an Owlet service name into a short "what you get" label, e.g.
+ *  "TikTok Comments [Default]" → "💬 Comments". */
+export function offerLabel(
+  owletName: string,
+  platformName: string,
+  typeLabel: string
+) {
+  const cleaned = stripOwletName(owletName, platformName, typeLabel);
+  // Owlet names are "what | targeting | speed"; the head is the deliverable,
+  // so prefer it over the whole marketing string when nothing matched.
+  const head = stripOwletName(
+    owletName.split(/[|·]/)[0],
+    platformName,
+    typeLabel
+  );
+
+  const kind =
+    serviceKind(head) ?? serviceKind(cleaned) ?? serviceKind(owletName);
+  if (kind) return `${kind.emoji} ${kind.label}`;
+
+  const fallback = (head || cleaned || owletName).slice(0, 60).trim();
+  return `⚡ ${fallback}`;
 }
 
 export type OwletCatalogService = {
