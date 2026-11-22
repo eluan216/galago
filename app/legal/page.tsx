@@ -162,7 +162,7 @@ export default function LegalPage() {
           <h3 className="mt-6 font-bold">eSIM pricing and cancellation</h3>
           <p>
             When eSIM purchases are enabled, Galago converts provider pricing
-            using reference exchange rates and currently applies a 7% markup.
+            using reference exchange rates and currently applies a 10% markup.
             The eSIM purchase feature may be unavailable while provider access
             is being configured. Cancellation is subject to provider approval
             and eligibility; installed, used, or otherwise ineligible profiles
