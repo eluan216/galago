@@ -71,6 +71,74 @@ const ACTIONS: Array<[string, string]> = [
   ["impressions", "impressions"],
 ];
 
+/** What a unit actually buys, labelled the way Owlet describes the service, so
+ *  buyers know they are paying for followers, comments, views, etc. */
+const SERVICE_KINDS: Array<[string, string, string]> = [
+  ["comment like", "💬", "Comment likes"],
+  ["comment", "💬", "Comments"],
+  ["dislike", "👎", "Dislikes"],
+  ["like", "❤️", "Likes"],
+  ["follower", "👥", "Followers"],
+  ["subscriber", "🔔", "Subscribers"],
+  ["member", "👥", "Members"],
+  ["view", "👀", "Views"],
+  ["watch hour", "⏱️", "Watch hours"],
+  ["play", "▶️", "Plays"],
+  ["stream", "🎧", "Streams"],
+  ["share", "🔁", "Shares"],
+  ["repost", "🔁", "Reposts"],
+  ["retweet", "🔁", "Reposts"],
+  ["save", "🔖", "Saves"],
+  ["vote", "🗳️", "Votes"],
+  ["reaction", "👍", "Reactions"],
+  ["impression", "📈", "Impressions"],
+  ["traffic", "🌐", "Traffic"],
+  ["visit", "🌐", "Visits"],
+  ["download", "⬇️", "Downloads"],
+  ["review", "⭐", "Reviews"],
+  ["rating", "⭐", "Ratings"],
+  ["mention", "📣", "Mentions"],
+  ["click", "👆", "Clicks"],
+];
+
+function serviceKind(text: string) {
+  const lower = text.toLowerCase();
+  for (const [needle, emoji, label] of SERVICE_KINDS) {
+    if (lower.includes(needle)) return { emoji, label };
+  }
+  return null;
+}
+
+function escapeRegExp(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Turn an Owlet service name into a short "what you get" label, e.g.
+ *  "TikTok Comments [Default]" → "💬 Comments". */
+export function offerLabel(
+  owletName: string,
+  platformName: string,
+  typeLabel: string
+) {
+  let cleaned = owletName.replace(
+    new RegExp(`\\[?\\s*${escapeRegExp(typeLabel)}\\s*\\]?`, "gi"),
+    " "
+  );
+  for (const word of platformName.split(/\s+/)) {
+    if (word.length < 3) continue;
+    cleaned = cleaned.replace(new RegExp(`\\b${escapeRegExp(word)}\\b`, "gi"), " ");
+  }
+  cleaned = cleaned
+    .replace(/[·|/]+/g, " ")
+    .replace(/\(\s*\)|\[\s*\]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const kind = serviceKind(cleaned) ?? serviceKind(owletName);
+  const text = kind ? kind.label : cleaned || owletName;
+  return kind ? `${kind.emoji} ${text}` : `⚡ ${text}`;
+}
+
 export type OwletCatalogService = {
   service: number;
   name: string;
@@ -165,6 +233,7 @@ export function buildCatalogPlan(
   const serviceMap = new Map<string, CatalogServiceRow>();
   const candidates: Array<{
     row: Omit<CatalogOfferRow, "name">;
+    owletName: string;
     label: string;
     serviceName: string;
     typeLabel: string;
@@ -207,7 +276,8 @@ export function buildCatalogPlan(
     if (rateKobo <= 0) continue;
 
     candidates.push({
-      label: `${category} · ${typeLabel}`,
+      owletName: s.name || category,
+      label: offerLabel(s.name || category, platformName, typeLabel),
       serviceName: category,
       typeLabel,
       row: {
@@ -222,6 +292,7 @@ export function buildCatalogPlan(
           provider: "owlet",
           owlet_service: s.service,
           owlet_type: typeLabel,
+          owlet_name: s.name || category,
           owlet_rate_usd_per_1000: rate,
           ngn_per_usd: ngnPerUsd,
           markup: OWLET_MARKUP,
@@ -230,8 +301,9 @@ export function buildCatalogPlan(
     });
   }
 
-  // Several Owlet services share a category and type, so disambiguate repeated
-  // labels with the Owlet id — otherwise the picker shows identical rows.
+  // Several Owlet services deliver the same thing (e.g. many "Followers"
+  // packages), so disambiguate repeated labels with the Owlet id — otherwise
+  // the picker shows identical rows.
   const labelCounts = new Map<string, number>();
   for (const c of candidates) {
     labelCounts.set(c.label, (labelCounts.get(c.label) ?? 0) + 1);
