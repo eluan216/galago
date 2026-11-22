@@ -7,14 +7,14 @@ import { providerPriceToNgnKobo } from "../lib/esim-pricing";
 test("eSIM wholesale prices convert to NGN with the configured markup", () => {
   assert.equal(
     providerPriceToNgnKobo(10_000, "USD", { USD: 1, NGN: 1_500 }),
-    160_500
+    165_000
   );
 });
 
 test("eSIM price conversion applies the source currency rate and rounds up", () => {
   assert.equal(
     providerPriceToNgnKobo(10_000, "EUR", { USD: 1, EUR: 0.9, NGN: 1_500 }),
-    178_334
+    183_334
   );
 });
 

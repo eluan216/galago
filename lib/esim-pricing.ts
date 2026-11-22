@@ -1,8 +1,10 @@
+import { PROVIDER_MARKUP_PERCENT } from "./markups";
+
 export function providerPriceToNgnKobo(
   priceUnits: number,
   currencyCode: string,
   usdRates: Record<string, number>,
-  markupPercent = 7
+  markupPercent = PROVIDER_MARKUP_PERCENT
 ) {
   const sourceRate = usdRates[currencyCode];
   const ngnRate = usdRates.NGN;
@@ -21,6 +23,10 @@ export function providerPriceToNgnKobo(
 
   const sourceAmount = priceUnits / 10_000;
   const amountNgn = (sourceAmount / sourceRate) * ngnRate;
-  const amountKobo = Math.ceil(amountNgn * (1 + markupPercent / 100) * 100);
+  // Subtract a negligible epsilon so a value that is mathematically whole
+  // (e.g. ₦1,500 × 1.10) does not gain a kobo from floating-point error.
+  const amountKobo = Math.ceil(
+    amountNgn * (1 + markupPercent / 100) * 100 - 1e-9
+  );
   return Number.isSafeInteger(amountKobo) ? amountKobo : null;
 }
